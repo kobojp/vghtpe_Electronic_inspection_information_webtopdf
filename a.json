@@ -1,0 +1,6 @@
+{
+    "name": "Jason",
+    "age": 21,
+    "skill": ["Python", "C/C++"],
+    "married": false
+  }
