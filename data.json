@@ -1,760 +1,760 @@
 {
-    "squadName" : "每日巡檢紀錄",
-    "Fire_Equipment" : [
-      {
-        "name" : "135戶職務官舍避難方向燈檢查(月)",
-        "api_1" : "/16/",
-        "api_2" : "/16/32"
-      },
-      {
-        "name" : "135戶職務官舍出口標示燈(月)檢查",
-        "api_1" : "/138/",
-        "api_2" : "/138/155"
-      },
-      {
-        "name" : "135戶職務官舍火警自動警報設備(月)檢查",
-        "api_1" : "/272/",
-        "api_2" : "/256/298"
-      },
-      {
-        "name" : "135戶職務官舍緊急廣播設備(月)檢查",
-        "api_1" : "/274/",
-        "api_2" : "/383/417"
-      },
-      {
-        "name" : "135戶職務官舍滅火器(月)檢查",
-        "api_1" : "/86/",
-        "api_2" : "/86/102"
-      },
-      {
-        "name" : "135戶職務官舍室內消防栓檢查(月)",
-        "api_1" : "/128/",
-        "api_2" : "/128/144"
-      },
-      {
-        "name" : "135戶職務官舍消防泵浦(月)檢查",
-        "api_1" : "/273/",
-        "api_2" : "/257/299"
-      }
-      {
-        "name" : "3號門停車場避難方向燈檢查(月)",
-        "api_1" : "/3/",
-        "api_2" : "/3/19"
-      },
-      {
-        "name" : "3號門停車場出口標示燈(月)檢查",
-        "api_1" : "/144/",
-        "api_2" : "/144/161"
-      },
-      {
-        "name" : "3號門停車場防火門及防火鐵捲門(月)檢查",
-        "api_1" : "/276/",
-        "api_2" : "/259/301"
-      },
-      {
-        "name" : "3號門停車場火警自動警報設備(月)檢查",
-        "api_1" : "/275/",
-        "api_2" : "/258/300"
-      },
-      {
-        "name" : "3號門停車場緊急廣播設備(月)檢查",
-        "api_1" : "/279/",
-        "api_2" : "/262/304"
-      },
-      {
-        "name" : "3號門停車場緊急照明燈檢查(月)",
-        "api_1" : "/34/",
-        "api_2" : "/34/50"
-      },
-      {
-        "name" : "3號門停車場樓層指示燈檢查(月)",
-        "api_1" : "/28/",
-        "api_2" : "/28/44"
-      },
-      {
-        "name" : "3號門停車場滅火器(月)檢查",
-        "api_1" : "/64/",
-        "api_2" : "/64/80"
-      },
-      {
-        "name" : "3號門停車場泡沬滅火設備(月)檢查",
-        "api_1" : "/277/",
-        "api_2" : "/260/302"
-      },
-      {
-        "name" : "3號門停車場室內消防栓檢查(月)",
-        "api_1" : "/108/",
-        "api_2" : "/108/124"
-      },
-      {
-        "name" : "3號門停車場消防泵浦(月)檢查",
-        "api_1" : "/278/",
-        "api_2" : "/261/303"
-      },
-      {
-        "name" : "B電荷中心火警自動警報設備(月)檢查",
-        "api_1" : "/280/",
-        "api_2" : "/263/305"
-      },
-      {
-        "name" : "B電荷中心滅火器(月)檢查",
-        "api_1" : "/65/",
-        "api_2" : "/65/81"
-      },
-      {
-        "name" : "C電荷中心火警自動警報設備(月)檢查",
-        "api_1" : "/281/",
-        "api_2" : "/264/306"
-      },
-      {
-        "name" : "C電荷中心滅火器(月)檢查",
-        "api_1" : "/66/",
-        "api_2" : "/66/82"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      },
-      {
-        "name" : "input",
-        "api_1" : "input",
-        "api_2" : "input"
-      }
-    ]
-  }
+  "squadName" : "每日巡檢紀錄",
+  "Fire_Equipment" : [
+    {
+      "name" : "135戶職務官舍避難方向燈檢查(月)",
+      "api_1" : "/16/",
+      "api_2" : "/16/32"
+    },
+    {
+      "name" : "135戶職務官舍出口標示燈(月)檢查",
+      "api_1" : "/138/",
+      "api_2" : "/138/155"
+    },
+    {
+      "name" : "135戶職務官舍火警自動警報設備(月)檢查",
+      "api_1" : "/272/",
+      "api_2" : "/256/298"
+    },
+    {
+      "name" : "135戶職務官舍緊急廣播設備(月)檢查",
+      "api_1" : "/274/",
+      "api_2" : "/383/417"
+    },
+    {
+      "name" : "135戶職務官舍滅火器(月)檢查",
+      "api_1" : "/86/",
+      "api_2" : "/86/102"
+    },
+    {
+      "name" : "135戶職務官舍室內消防栓檢查(月)",
+      "api_1" : "/128/",
+      "api_2" : "/128/144"
+    },
+    {
+      "name" : "135戶職務官舍消防泵浦(月)檢查",
+      "api_1" : "/273/",
+      "api_2" : "/257/299"
+    },
+    {
+      "name" : "3號門停車場避難方向燈檢查(月)",
+      "api_1" : "/3/",
+      "api_2" : "/3/19"
+    },
+    {
+      "name" : "3號門停車場出口標示燈(月)檢查",
+      "api_1" : "/144/",
+      "api_2" : "/144/161"
+    },
+    {
+      "name" : "3號門停車場防火門及防火鐵捲門(月)檢查",
+      "api_1" : "/276/",
+      "api_2" : "/259/301"
+    },
+    {
+      "name" : "3號門停車場火警自動警報設備(月)檢查",
+      "api_1" : "/275/",
+      "api_2" : "/258/300"
+    },
+    {
+      "name" : "3號門停車場緊急廣播設備(月)檢查",
+      "api_1" : "/279/",
+      "api_2" : "/262/304"
+    },
+    {
+      "name" : "3號門停車場緊急照明燈檢查(月)",
+      "api_1" : "/34/",
+      "api_2" : "/34/50"
+    },
+    {
+      "name" : "3號門停車場樓層指示燈檢查(月)",
+      "api_1" : "/28/",
+      "api_2" : "/28/44"
+    },
+    {
+      "name" : "3號門停車場滅火器(月)檢查",
+      "api_1" : "/64/",
+      "api_2" : "/64/80"
+    },
+    {
+      "name" : "3號門停車場泡沬滅火設備(月)檢查",
+      "api_1" : "/277/",
+      "api_2" : "/260/302"
+    },
+    {
+      "name" : "3號門停車場室內消防栓檢查(月)",
+      "api_1" : "/108/",
+      "api_2" : "/108/124"
+    },
+    {
+      "name" : "3號門停車場消防泵浦(月)檢查",
+      "api_1" : "/278/",
+      "api_2" : "/261/303"
+    },
+    {
+      "name" : "B電荷中心火警自動警報設備(月)檢查",
+      "api_1" : "/280/",
+      "api_2" : "/263/305"
+    },
+    {
+      "name" : "B電荷中心滅火器(月)檢查",
+      "api_1" : "/65/",
+      "api_2" : "/65/81"
+    },
+    {
+      "name" : "C電荷中心火警自動警報設備(月)檢查",
+      "api_1" : "/281/",
+      "api_2" : "/264/306"
+    },
+    {
+      "name" : "C電荷中心滅火器(月)檢查",
+      "api_1" : "/66/",
+      "api_2" : "/66/82"
+    },
+    {
+      "name" : "單身宿舍大樓避難方向燈檢查(月)",
+      "api_1" : "/18/",
+      "api_2" : "/18/34"
+    },
+    {
+      "name" : "單身宿舍大樓避難器具(月)檢查",
+      "api_1" : "/363/",
+      "api_2" : "/353/388"
+    },
+    {
+      "name" : "單身宿舍大樓出口標示燈(月)檢查",
+      "api_1" : "/157/",
+      "api_2" : "/157/174"
+    },
+    {
+      "name" : "單身宿舍大樓火警自動警報設備(月)檢查",
+      "api_1" : "/359/",
+      "api_2" : "/349/384"
+    },
+    {
+      "name" : "單身宿舍大樓緊急廣播設備(月)檢查",
+      "api_1" : "/362/",
+      "api_2" : "/352/387"
+    },
+    {
+      "name" : "單身宿舍大樓緊急照明燈檢查(月)",
+      "api_1" : "/55/",
+      "api_2" : "/55/70"
+    },
+    {
+      "name" : "單身宿舍大樓滅火器(月)檢查",
+      "api_1" : "/99/",
+      "api_2" : "/99/115"
+    },
+    {
+      "name" : "單身宿舍大樓排煙設備(月)檢查",
+      "api_1" : "/361/",
+      "api_2" : "/351/386"
+    },
+    {
+      "name" : "單身宿舍大樓室內消防栓檢查(月)",
+      "api_1" : "/120/",
+      "api_2" : "/120/136"
+    },
+    {
+      "name" : "單身宿舍大樓自動撒水設備(月)檢查",
+      "api_1" : "/360/",
+      "api_2" : "/350/385"
+    },
+    {
+      "name" : "地下連通道避難方向燈檢查(月)",
+      "api_1" : "/6/",
+      "api_2" : "/6/22"
+    },
+    {
+      "name" : "地下連通道避難器具(月)檢查",
+      "api_1" : "/321/",
+      "api_2" : "/294/336"
+    },
+    {
+      "name" : "地下連通道出口標示燈(月)檢查",
+      "api_1" : "/149/",
+      "api_2" : "/149/166"
+    },
+    {
+      "name" : "地下連通道火警自動警報設備(月)檢查",
+      "api_1" : "/316/",
+      "api_2" : "/289/331"
+    },
+    {
+      "name" : "地下連通道緊急廣播設備(月)檢查",
+      "api_1" : "/320/",
+      "api_2" : "/293/335"
+    },
+    {
+      "name" : "地下連通道緊急照明燈檢查(月)",
+      "api_1" : "/40/",
+      "api_2" : "/40/55"
+    },
+    {
+      "name" : "地下連通道滅火器(月)檢查",
+      "api_1" : "/72/",
+      "api_2" : "/72/88"
+    },
+    {
+      "name" : "地下連通道排煙設備(月)檢查",
+      "api_1" : "/319/",
+      "api_2" : "/292/334"
+    },
+    {
+      "name" : "地下連通道室內消防栓檢查(月)",
+      "api_1" : "/111/",
+      "api_2" : "/111/127"
+    },
+    {
+      "name" : "地下連通道消防泵浦(月)檢查",
+      "api_1" : "/318/",
+      "api_2" : "/291/333"
+    },
+    {
+      "name" : "地下連通道消防緊急電源插座檢查",
+      "api_1" : "/103/",
+      "api_2" : "/103/119"
+    },
+    {
+      "name" : "地下連通道自動撒水設備(月)檢查",
+      "api_1" : "/317/",
+      "api_2" : "/290/332"
+    },
+    {
+      "name" : "調度站出口標示燈(月)檢查",
+      "api_1" : "/156/",
+      "api_2" : "/156/173"
+    },
+    {
+      "name" : "調度站緊急照明燈檢查(月)",
+      "api_1" : "/49/",
+      "api_2" : "/49/64"
+    },
+    {
+      "name" : "調度站滅火器(月)檢查",
+      "api_1" : "/81/",
+      "api_2" : "/81/97"
+    },
+    {
+      "name" : "東眷護士宿舍滅火器(月)檢查",
+      "api_1" : "/96/",
+      "api_2" : "/96/112"
+    },
+    {
+      "name" : "東區眷舍滅火器(月)檢查",
+      "api_1" : "/95/",
+      "api_2" : "/95/111"
+    },
+    {
+      "name" : "動力中心HALON 1301自動滅火設備(月)檢查",
+      "api_1" : "/355/",
+      "api_2" : "/333/370"
+    },
+    {
+      "name" : "動力中心避難方向燈檢查(月)",
+      "api_1" : "/25/",
+      "api_2" : "/25/41"
+    },
+    {
+      "name" : "動力中心出口標示燈(月)檢查",
+      "api_1" : "/142/",
+      "api_2" : "/142/159"
+    },
+    {
+      "name" : "動力中心氮氣自動滅火設備(月)檢查",
+      "api_1" : "/358/",
+      "api_2" : "/336/373"
+    },
+    {
+      "name" : "動力中心緊急照明燈檢查(月)",
+      "api_1" : "/61/",
+      "api_2" : "/61/77"
+    },
+    {
+      "name" : "動力中心滅火器(月)檢查",
+      "api_1" : "/90/",
+      "api_2" : "/90/106"
+    },
+    {
+      "name" : "動力中心室內消防栓檢查(月)",
+      "api_1" : "/123/",
+      "api_2" : "/123/139"
+    },
+    {
+      "name" : "動力中心消防泵浦(月)檢查",
+      "api_1" : "/357/",
+      "api_2" : "/335/372"
+    },
+    {
+      "name" : "動力中心自動撒水設備(月)檢查",
+      "api_1" : "/356/",
+      "api_2" : "/334/371"
+    },
+    {
+      "name" : "二門診避難方向燈檢查(月)",
+      "api_1" : "/14/",
+      "api_2" : "/14/30"
+    },
+    {
+      "name" : "二門診避難器具(月)檢查",
+      "api_1" : "/288/",
+      "api_2" : "/340/377"
+    },
+    {
+      "name" : "二門診出口標示燈(月)檢查",
+      "api_1" : "/136/",
+      "api_2" : "/136/153"
+    },
+    {
+      "name" : "二門診防火門(月)檢查",
+      "api_1" : "/286/",
+      "api_2" : "/267/309"
+    },
+    {
+      "name" : "二門診火警自動警報設備(月)檢查",
+      "api_1" : "/284/",
+      "api_2" : "/265/307"
+    },
+    {
+      "name" : "二門診緊急照明燈檢查(月)",
+      "api_1" : "/52/",
+      "api_2" : "/52/67"
+    },
+    {
+      "name" : "二門診滅火器(月)檢查",
+      "api_1" : "/84/",
+      "api_2" : "/84/100"
+    },
+    {
+      "name" : "二門診室內消防栓檢查(月)",
+      "api_1" : "/126/",
+      "api_2" : "/126/142"
+    },
+    {
+      "name" : "二門診消防泵浦(月)檢查",
+      "api_1" : "/287/",
+      "api_2" : "/339/376"
+    },
+    {
+      "name" : "二門診自動撒水設備(月)檢查",
+      "api_1" : "/285/",
+      "api_2" : "/266/308"
+    },
+    {
+      "name" : "法定停車場避難方向燈檢查(月)",
+      "api_1" : "/20/",
+      "api_2" : "/20/36"
+    },
+    {
+      "name" : "法定停車場出口標示燈(月)檢查",
+      "api_1" : "/159/",
+      "api_2" : "/159/176"
+    },
+    {
+      "name" : "法定停車場防火門及防火鐵捲門(月)檢查",
+      "api_1" : "/333/",
+      "api_2" : "/306/346"
+    },
+    {
+      "name" : "法定停車場火警自動警報設備(月)檢查",
+      "api_1" : "/331/",
+      "api_2" : "/307/347"
+    },
+    {
+      "name" : "法定停車場緊急廣播設備(月)檢查",
+      "api_1" : "/337/",
+      "api_2" : "/313/352"
+    },
+    {
+      "name" : "法定停車場緊急照明燈檢查(月)",
+      "api_1" : "/57/",
+      "api_2" : "/57/73"
+    },
+    {
+      "name" : "法定停車場滅火器(月)檢查",
+      "api_1" : "/97/",
+      "api_2" : "/97/113"
+    },
+    {
+      "name" : "法定停車場排煙設備(月)檢查",
+      "api_1" : "/336/",
+      "api_2" : "/312/351"
+    },
+    {
+      "name" : "法定停車場泡沬滅火設備(月)檢查",
+      "api_1" : "/334/",
+      "api_2" : "/310/349"
+    },
+    {
+      "name" : "法定停車場室內消防栓檢查(月)",
+      "api_1" : "/118/",
+      "api_2" : "/118/134"
+    },
+    {
+      "name" : "二門診消防泵浦(月)檢查",
+      "api_1" : "/287/",
+      "api_2" : "/339/376"
+    },
+    {
+      "name" : "二門診自動撒水設備(月)檢查",
+      "api_1" : "/285/",
+      "api_2" : "/266/308"
+    },
+    {
+      "name" : "法定停車場避難方向燈檢查(月)",
+      "api_1" : "/20/",
+      "api_2" : "/20/36"
+    },
+    {
+      "name" : "法定停車場出口標示燈(月)檢查",
+      "api_1" : "/159/",
+      "api_2" : "/159/176"
+    },
+    {
+      "name" : "法定停車場防火門及防火鐵捲門(月)檢查",
+      "api_1" : "/333/",
+      "api_2" : "/306/346"
+    },
+    {
+      "name" : "法定停車場火警自動警報設備(月)檢查",
+      "api_1" : "/331/",
+      "api_2" : "/307/347"
+    },
+    {
+      "name" : "法定停車場緊急廣播設備(月)檢查",
+      "api_1" : "/337/",
+      "api_2" : "/313/352"
+    },
+    {
+      "name" : "法定停車場緊急照明燈檢查(月)",
+      "api_1" : "/57/",
+      "api_2" : "/57/73"
+    },
+    {
+      "name" : "法定停車場滅火器(月)檢查",
+      "api_1" : "/97/",
+      "api_2" : "/97/113"
+    },
+    {
+      "name" : "法定停車場排煙設備(月)檢查",
+      "api_1" : "/336/",
+      "api_2" : "/312/351"
+    },
+    {
+      "name" : "法定停車場泡沬滅火設備(月)檢查",
+      "api_1" : "/334/",
+      "api_2" : "/310/349"
+    },
+    {
+      "name" : "法定停車場室內消防栓檢查(月)",
+      "api_1" : "/118/",
+      "api_2" : "/118/134"
+    },
+    {
+      "name" : "法定停車場消防泵浦(月)檢查",
+      "api_1" : "/335/",
+      "api_2" : "/311/350"
+    },
+    {
+      "name" : "法定停車場自動撒水設備(月)檢查",
+      "api_1" : "/332/",
+      "api_2" : "/308/348"
+    },
+    {
+      "name" : "福利社避難器具(月)檢查",
+      "api_1" : "/370/",
+      "api_2" : "/360/395"
+    },
+    {
+      "name" : "福利社緊急照明燈檢查(月)",
+      "api_1" : "/48/",
+      "api_2" : "/48/63"
+    },
+    {
+      "name" : "福利社滅火器(月)檢查",
+      "api_1" : "/80/",
+      "api_2" : "/80/96"
+    },
+    {
+      "name" : "富貴一路眷舍滅火器(月)檢查",
+      "api_1" : "/82/",
+      "api_2" : "/82/98"
+    },
+    {
+      "name" : "湖畔門診避難方向燈檢查(月)",
+      "api_1" : "/22/",
+      "api_2" : "/22/38"
+    },
+    {
+      "name" : "湖畔門診避難器具(月)檢查",
+      "api_1" : "/369/",
+      "api_2" : "/359/394"
+    },
+    {
+      "name" : "湖畔門診出口標示燈(月)檢查",
+      "api_1" : "/161/",
+      "api_2" : "/161/178"
+    },
+    {
+      "name" : "湖畔門診防火鐵捲門(月)檢查",
+      "api_1" : "/366/",
+      "api_2" : "/356/391"
+    },
+    {
+      "name" : "湖畔門診火警自動警報設備(月)檢查",
+      "api_1" : "/364/",
+      "api_2" : "/354/389"
+    },
+    {
+      "name" : "湖畔門診緊急廣播設備(月)檢查",
+      "api_1" : "/368/",
+      "api_2" : "/358/393"
+    },
+    {
+      "name" : "湖畔門診緊急照明燈檢查(月)",
+      "api_1" : "/58/",
+      "api_2" : "/58/74"
+    },
+    {
+      "name" : "湖畔門診滅火器(月)檢查",
+      "api_1" : "/92/",
+      "api_2" : "/92/108"
+    },
+    {
+      "name" : "湖畔門診排煙設備(月)檢查",
+      "api_1" : "/367/",
+      "api_2" : "/357/392"
+    },
+    {
+      "name" : "湖畔門診室內消防栓檢查(月)",
+      "api_1" : "/116/",
+      "api_2" : "/116/132"
+    },
+    {
+      "name" : "湖畔門診自動撒水設備(月)檢查",
+      "api_1" : "/365/",
+      "api_2" : "/355/390"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    },
+    {
+      "name" : "input",
+      "api_1" : "input",
+      "api_2" : "input"
+    }
+  ]
+}
