@@ -1,12 +1,20 @@
 import json
 import pdfkit
 import os
+import subprocess
+# import requests
 
 """
 目前先想功能就好，數據慢慢手動建立
 
-打包後，要跳出彈出畫面 輸入年月份，只能一種格式，寫錯跳錯誤
+打包後，寫一個下介面選單，12個月分並選擇後判斷當前是否是當月或是低於月份，超過則跳錯誤
+
+
 輸出完成跳出資料夾
+
+將data.json放到github web上，再用request讀取，方便新增資料
+
+
 
 新增功能
     當前路徑建立資料夾，判斷資料夾是否存在，以月分建檔名，5月消防月報表
@@ -34,7 +42,7 @@ class htmltopdf:
     }
 
     def folder(self, folderpath_name):
-    # 使用相對路徑且資料夾都在根目錄 統一輸入一個值就可以解決
+    # 使用相對路徑且資料夾都在根目錄
         folderpath = folderpath_name 
         # 檢查目錄是否存在 
         if os.path.isdir(folderpath):
@@ -45,6 +53,10 @@ class htmltopdf:
             print('{}建立完成'.format(folderpath))
 
     def call(self, date:str):
+        # url json https://www.delftstack.com/zh-tw/howto/python/python-get-json-from-url/
+        
+        self.folder(os.path.join("test", date))  #建立資料夾
+
         with open("testdata.json", encoding="utf-8") as f: #Test usefile testdata.json
             p = json.load(f) # json data
 
@@ -58,10 +70,22 @@ class htmltopdf:
             url_api_2 = i['api_2']
             print(f'http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}' + f'  {name}')
             url = f'http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}'
-            pdfkit.from_url(url, os.path.join("test", name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
+            pdfkit.from_url(url, os.path.join("test", date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
+        
+        # open folder
+        start_directory = os.path.join("test", date) 
+        self.startfile(start_directory)
+
+    # Finish Open the folder
+    def startfile(sele, filename):
+        try:
+            os.startfile(filename)
+        except:
+            subprocess.Popen(['xdg-open', filename])
+
 
 if __name__ == '__main__':
     pass
     # call('2022-05')
-    htmltopdf().call('2022-05')
+    htmltopdf().call('2022-03')
     # pdfkit.from_url('http://210.61.217.104/Report6/82/2022-05/82/98', os.path.join("test", 'abc11') + '.pdf', options=options, configuration=config)
