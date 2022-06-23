@@ -63,7 +63,7 @@ class htmltopdf:
         date = date # ex : '2022-05'
 
         # 寫一個匿名funtion 計算多少筆檔案，抓name(使用len)
-
+        # 多現程 分配 3個線程資料分成三等份，計算處理筆數 
         for i in p['Fire_Equipment']:
             name = i['name']
             url_api_1 = i['api_1']
