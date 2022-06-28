@@ -2,14 +2,48 @@ import json
 import pdfkit
 import os
 import subprocess
-from tkinter import *
-import hashlib
-import time
-import main
+from threading import Thread
+import calendar
+import threading
+from requests import delete
 
 # import requests
 
 """
+每日批次API結構
+http://210.61.217.104/Report6BatchAll/237/2022-05-01/2022-05-31/237/248
+每周
+http://210.61.217.104/Report6BatchAll/214/2022-05-01/2022-05-31/214/225
+
+分3條線程
+    消防
+    電力
+    水力
+
+data資料結構
+    消防
+    電力
+        每日
+        每周
+        每月
+    水力
+        每日
+        每周
+        每月
+寫好電 水就copy就好
+
+call法，在cmd上 顯示文字 下載消防報表 選擇A，電力報表選擇B、水力報表選擇C，全部選擇all
+
+限制性輸入取當前年分01~12月如 2020-01
+
+水：每日、每周、月份，各一個funtion
+電：每日、每周、月份，各一個funtion
+
+輸出資料夾結構
+6月消防報表
+6月電力報表
+6月水力報表
+
 目前先想功能就好，數據慢慢手動建立
 打包後，寫一個下介面選單，12個月分並選擇後判斷當前是否是當月或是低於月份，超過則跳錯誤
 輸出完成跳出資料夾
@@ -31,10 +65,6 @@ pdfkit.from_url("http://google.com", "out.pdf", configuration=config)
 """
 
 class htmltopdf:
-    def __init__(self,init_window_name):
-        self.init_window_name = init_window_name
-    # json data    
-    file_data = 'data.json' #Test usefile test_data.json
     # wkhtmltopdf Path setting
     path_wkhtmltopdf = os.path.join(os.getcwd(), 'wkhtmltox\\bin', 'wkhtmltopdf.exe')
     config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
@@ -42,7 +72,9 @@ class htmltopdf:
     options = {
     'no-background': None
     }
-
+    with open("test_data.json", encoding="utf-8") as f: #Test usefile testdata.json
+        open_data = json.load(f) # json data
+    
     def folder(self, folderpath_name):
     # 使用相對路徑且資料夾都在根目錄
         folderpath = folderpath_name 
@@ -53,35 +85,58 @@ class htmltopdf:
             print('資料夾不存在。建立{}資料夾'.format(folderpath))
             os.mkdir(folderpath)
             print('{}建立完成'.format(folderpath))
-
-    def call(self, date:str):
+    
+    #消防設備
+    def Fire_call(self, date:str):
         # url json https://www.delftstack.com/zh-tw/howto/python/python-get-json-from-url/
         
         self.folder(os.path.join("test", date))  #建立資料夾
 
-        with open(self.file_data, encoding="utf-8") as f: #Test usefile test_data.json
-            p = json.load(f) # json data
+        # with open("data.json", encoding="utf-8") as f: #Test usefile testdata.json
+        #     p = json.load(f) # json data
 
         date = date # ex : '2022-05'
 
-        #在這裡寫判斷值 抓取當前月份 如果選擇大於月份就跳出錯誤訊息
-
         # 寫一個匿名funtion 計算多少筆檔案，抓name(使用len)
         try:
-            for i in p['Fire_Equipment']:
+            for i in self.open_data['Fire_Equipment']:
                 name = i['name']
                 url_api_1 = i['api_1']
                 url_api_2 = i['api_2']
-                message = f'http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}' + f'  {name}'
-                
                 print(f'http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}' + f'  {name}')
                 url = f'http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}'
                 pdfkit.from_url(url, os.path.join("test", date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
-                self.log_data_Text.insert(END, message + '\n')
-                self.log_data_Text.update() #動態更新訊息
-                # 寫一個大於10筆就刪除訊息資料
-                
-                # return f'http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}' + f'  {name}'
+        except:
+            print('請求失敗', url)
+
+        # open folder
+        start_directory = os.path.join("test", date) 
+        self.startfile(start_directory)
+
+    # 電力設備
+    def electricity(self, date:str):
+        """
+        api 結構
+        /Report6BatchAll/237/2022-05-01/2022-05-31/237/248
+        /Report6BatchAll/237/{2022-05}-01/{2022-05}-31/237/248
+
+        /Report6BatchAll/237/{2022-05}-01/{2022-05}-{getmotn}/237/248
+
+        使用批次檔案產生
+        """
+
+        self.folder(os.path.join("test", date))  #建立資料夾
+
+        date = date # ex : '2022-05'
+
+        try:
+            for i in self.open_data['electricity_every_day']:
+                name = i['name']
+                url_api_1 = i['api_1']
+                url_api_2 = i['api_2']
+                print(f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}' + f'  {name}')
+                url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
+                pdfkit.from_url(url, os.path.join("test", date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
         except:
             print('請求失敗', url)
 
@@ -96,138 +151,45 @@ class htmltopdf:
         except:
             subprocess.Popen(['xdg-open', filename])
 
-
-# gui 設計區塊
-
-    #设置窗口
-    def set_init_window(self):
-        self.init_window_name.title("下載消防報表_v1.0")           #窗口名
-        #self.init_window_name.geometry('320x160+10+10')                         #290 160为窗口大小，+10 +10 定义窗口弹出时的默认展示位置
-        self.init_window_name.geometry('800x600+10+10')
-        #self.init_window_name["bg"] = "pink"                                    #窗口背景色，其他背景色见：blog.csdn.net/chl0000/article/details/7657887
-        #self.init_window_name.attributes("-alpha",0.9)                          #虚化，值越小虚化程度越高
-        #标签
-        self.log_label = Label(self.init_window_name, text="日志")
-        self.log_label.grid(row=2, column=5)
-        self.select = Label(self.init_window_name, text="日期\n選擇")
-        self.select.grid(row=3, column=1)
-
-
-        #框
-        self.log_data_Text = Text(self.init_window_name, width=60, height=30)  # 日志框
-        self.log_data_Text.grid(row=3, column=10, columnspan=1)
-
-        #按钮
-        # self.str_trans_to_md5_button = Button(self.init_window_name, text="字符串转MD5", bg="lightblue", width=10,command=self.str_trans_to_md5)  # 调用内部方法  加()为直接调用
-        # self.str_trans_to_md5_button.grid(row=1, column=11)
+    # get month of day   
+    def get_monthrange(sele,date):
+        month = sele.delete_left_zero(date)
+        year = date.split('-')[0]
+        day = calendar.monthrange(int(year),int(month))
+        print(f'{date} 月份天數 {day[1]}')
+        return day[1]
         
-        #日期框
-        self.select_option = Listbox(self.init_window_name,width=30, height=15)
-        self.select_option.grid(row=3, column=2, columnspan=1)
-        
-        #教學 https://shengyu7697.github.io/python-tkinter-listbox/
-        #取得選擇框選擇的值 get按鈕
-        self.select_optionget = Button(self.init_window_name, text='get current selection', command=self.button_event)
-        self.select_optionget.grid(row=20, column=0, columnspan=10)
-        # 顯示清單
-        # https://www.geeksforgeeks.org/how-to-get-selected-value-from-listbox-in-tkinter/
-        # 取得選擇值寫法
 
-        # li = ['C','python','php','html','SQL','java']
-        year = str(time.localtime().tm_year)
-        li = [year + '-01',year + '-02',year + '-03',year + '-04',year + '-05',year + '-06',
-        year + '-07',year + '-08',year + '-09',year + '-10',year + '-11',year + '-12']
+    # Remove the left zero ex:'08' to '8' ， Use in get month of day
+    def delete_left_zero(sele,date:str):
+        str = date
+        del_zero = str.split('-')[1].lstrip('0')
+        # print(del_zero)
+        return del_zero
 
+
+    # thread
+    def start_thread(self, thread_number, call, thread_name:str):
         """
-        取當前年份
-        共12月份
-        
-        +寫判斷取得當前月份如果選擇大於當前月份就要跳出錯誤
-
+        重寫
         """
-        for item in li:            # 插入li，放入日期選項
-            self.select_option.insert(0,item) 
-        
-            # 打印到text文字框，要寫一個def 執行程式就會打印print
-            # self.init_data_Text.insert(END, item + '\n')
-
-        # self.select_option.pack()
-
-    # 回傳日期的值
-    def button_event(self):
-        # print(type(mylistbox.curselection()))
-        print(self.select_option.curselection())
-        # print(self.select_option.get())
-        
-        for i in self.select_option.curselection():
-            print(self.select_option.get(i))
-            self.call(self.select_option.get(i))
-            # self.test_code()
-            #這裡下call程式
         
 
-    #參考功能函数
-    def str_trans_to_md5(self):
-
-        self.test_code()
-        src = self.init_data_Text.get(1.0,END).strip().replace("\n","").encode()
-        #print("src =",src)
-        if src:
-            try:
-                myMd5 = hashlib.md5()
-                myMd5.update(src)
-                myMd5_Digest = myMd5.hexdigest()
-                #print(myMd5_Digest)
-                #输出到界面
-                self.result_data_Text.delete(1.0,END)
-                self.result_data_Text.insert(1.0,myMd5_Digest)
-                self.write_log_to_Text("INFO:str_trans_to_md5 success")
-                # self.result_data_Text.insert(1.0, 'TEST') 測試寫到TEXT
-            except:
-                self.result_data_Text.delete(1.0,END)
-                self.result_data_Text.insert(1.0,"字符串转MD5失败")
-        else:
-            self.write_log_to_Text("ERROR:str_trans_to_md5 failed")
-
-
-    #获取当前时间
-    def get_current_time(self):
-        current_time = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-        return current_time
-
-
-    #日志动态打印
-    def write_log_to_Text(self,logmsg):
-        global LOG_LINE_NUM
-        current_time = self.get_current_time()
-        logmsg_in = str(current_time) +" " + str(logmsg) + "\n"      #换行
-        if LOG_LINE_NUM <= 7:
-            self.log_data_Text.insert(END, logmsg_in)
-            LOG_LINE_NUM = LOG_LINE_NUM + 1
-        else:
-            self.log_data_Text.delete(1.0,2.0)
-            self.log_data_Text.insert(END, logmsg_in)
-
-    # 測試數據到text框
-    def test_code(self):
-        # date = date
-        for i in range(1,100):
-            self.log_data_Text.insert(END, str(i) + '\n')
-
-
-def gui_start():
-    init_window = Tk()              #实例化出一个父窗口
-    ZMJ_PORTAL = htmltopdf(init_window)
-    # 设置根窗口默认属性
-    ZMJ_PORTAL.set_init_window()
-
-    init_window.mainloop()          #父窗口进入事件循环，可以理解为保持窗口运行，否则界面不展示
-
+        try:
+            threading.Thread(target=call, args=(thread_number,))
+            Thread()
+        except:
+            print(f'失敗第{thread_name}線程') 
 
 if __name__ == '__main__':
-    # my = htmltopdf()
-    # my.call('2022-05')
-    gui_start()
+    my = htmltopdf()
+    # my.Fire_call('2022-03')
+    # my.get_monthrange('2022-06')
+    # my.electricity('2022-05')
+    
+    # date = input('')
+
+    # my.delete_left_zero('2022-06')
     # pdfkit.from_url('http://210.61.217.104/Report6/82/2022-05/82/98', os.path.join("test", 'abc11') + '.pdf', options=options, configuration=config)
 
 
