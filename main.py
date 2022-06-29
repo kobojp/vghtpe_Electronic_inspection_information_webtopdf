@@ -71,7 +71,7 @@ pdfkit.from_url("http://google.com", "out.pdf", configuration=config)
 """
 
 class htmltopdf:
-    def __init__(self,File_folder='水電消防報表',fire='消防',electricity_folder='電力',drain='排水'):
+    def __init__(self, File_folder='水電消防報表',  fire='消防', electricity_folder='電力', drain='排水'):
         self.File_folder = File_folder # Share
         self.fire_folder = fire
         self.electricity_folder = electricity_folder
@@ -104,20 +104,22 @@ class htmltopdf:
     
     #消防設備
     def Fire_call(self, date:str):
+        date = date  # ex : '2022-05'
 
-        # 待修正 無法建立資料夾 
-        self.folder(os.path.join(self.File_folder, self.fire_folder, date))  #建立資料夾
+        #建立資料夾
+        self.folder(os.path.join(self.File_folder))  #水電消防報表
+        self.folder(os.path.join(self.File_folder,self.fire_folder))  #消防
+        self.folder(os.path.join(self.File_folder,self.fire_folder,date))  # 月
 
         # with open("data.json", encoding="utf-8") as f: #Test usefile testdata.json
         #     p = json.load(f) # json data
 
-        date = date  # ex : '2022-05'
-
+    
         # 寫一個匿名funtion 計算多少筆檔案，抓name(使用len)
         count_file = []
         for i in self.open_data['Fire_Equipment']:
             count_file.append(i['name'])
-        print(f'共有{count_file}個PDF')
+        print(f'共有{len(count_file)}個PDF')
 
         try:
             for i in self.open_data['Fire_Equipment']:
@@ -131,7 +133,7 @@ class htmltopdf:
             print('請求失敗', url)
 
         # open folder
-        start_directory = os.path.join("test", date) 
+        start_directory = os.path.join(self.File_folder, self.fire_folder, date)
         self.startfile(start_directory)
 
     # 電力設備
