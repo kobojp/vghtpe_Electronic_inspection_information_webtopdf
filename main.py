@@ -71,16 +71,26 @@ pdfkit.from_url("http://google.com", "out.pdf", configuration=config)
 """
 
 class htmltopdf:
+    def __init__(self,File_folder='水電消防報表',fire='消防',electricity_folder='電力',drain='排水'):
+        self.File_folder = File_folder # Share
+        self.fire_folder = fire
+        self.electricity_folder = electricity_folder
+        self.drain_folder = drain
+
     # wkhtmltopdf Path setting
     path_wkhtmltopdf = os.path.join(os.getcwd(), 'wkhtmltox\\bin', 'wkhtmltopdf.exe')
     config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+
     # PDF output settings
     options = {
     'no-background': None
     }
+
+    # open all data
+    # url json https://www.delftstack.com/zh-tw/howto/python/python-get-json-from-url/
     with open("test_data.json", encoding="utf-8") as f: #Test usefile testdata.json
         open_data = json.load(f) # json data
-    
+
     def folder(self, folderpath_name):
     # 使用相對路徑且資料夾都在根目錄
         folderpath = folderpath_name 
@@ -94,16 +104,21 @@ class htmltopdf:
     
     #消防設備
     def Fire_call(self, date:str):
-        # url json https://www.delftstack.com/zh-tw/howto/python/python-get-json-from-url/
-        
-        self.folder(os.path.join("test", date))  #建立資料夾
+
+        # 待修正 無法建立資料夾 
+        self.folder(os.path.join(self.File_folder, self.fire_folder, date))  #建立資料夾
 
         # with open("data.json", encoding="utf-8") as f: #Test usefile testdata.json
         #     p = json.load(f) # json data
 
-        date = date # ex : '2022-05'
+        date = date  # ex : '2022-05'
 
         # 寫一個匿名funtion 計算多少筆檔案，抓name(使用len)
+        count_file = []
+        for i in self.open_data['Fire_Equipment']:
+            count_file.append(i['name'])
+        print(f'共有{count_file}個PDF')
+
         try:
             for i in self.open_data['Fire_Equipment']:
                 name = i['name']
@@ -111,7 +126,7 @@ class htmltopdf:
                 url_api_2 = i['api_2']
                 print(f'http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}' + f'  {name}')
                 url = f'http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}'
-                pdfkit.from_url(url, os.path.join("test", date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
+                pdfkit.from_url(url, os.path.join(self.File_folder, self.fire_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
         except:
             print('請求失敗', url)
 
@@ -172,6 +187,18 @@ class htmltopdf:
         del_zero = str.split('-')[1].lstrip('0')
         # print(del_zero)
         return del_zero
+    
+    def input_(self):
+        while True:
+            text=input('輸入格式，範例 2022-06: ')
+            if len(text)==7 and int(text[:4]) >= 2022 and text[4] == '-' and text[:4].isnumeric() \
+                and len(text[:4]) == 4 and text[5:7].isnumeric()\
+                and len(text[5:7]) == 2 and int(text[5:7]) >= 1 and int(text[5:7]) <= 12:
+                break
+            else:
+                print('輸入錯誤，請輸入正確格式')
+        print('Valid input')
+        return text
 
 
     # thread
@@ -189,6 +216,7 @@ class htmltopdf:
 
 if __name__ == '__main__':
     my = htmltopdf()
+    my.Fire_call('2022-05')
     # my.Fire_call('2022-03')
     # my.get_monthrange('2022-06')
     # my.electricity('2022-05')
