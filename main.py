@@ -228,6 +228,30 @@ class htmltopdf:
             Thread()
         except:
             print(f'失敗第{thread_name}線程') 
+    
+    # 資料API測試正確性
+    def Data_verification(self):
+        """
+        消防 
+            ['Fire_Equipment']
+        電力 
+            ['electricity_every_week']
+            ['electricity_every_month']
+            ['electricity_every_day']
+        排水
+
+        """
+
+        for i in self.open_data['Fire_Equipment']:
+            name = i['name']
+            url_api_1 = i['api_1']
+            url_api_2 = i['api_2']
+
+            if url_api_1 == 'input' or url_api_2 == 'input':
+                continue
+            else:
+                print(url_api_1)
+        
 
 if __name__ == '__main__':
     my = htmltopdf()
