@@ -148,10 +148,17 @@ class htmltopdf:
         使用批次檔案產生
         """
 
-        self.folder(os.path.join("test", date))  #建立資料夾
+        #建立資料夾
+        self.folder(os.path.join(self.File_folder))  #水電消防報表
+        self.folder(os.path.join(self.File_folder,self.electricity_folder))  #電力
+        self.folder(os.path.join(self.File_folder,self.electricity_folder,date))  # 月
+
+
+        # self.folder(os.path.join("test", date))  #建立資料夾
 
         date = date # ex : '2022-05'
 
+        # day
         try:
             for i in self.open_data['electricity_every_day']:
                 name = i['name']
@@ -159,12 +166,18 @@ class htmltopdf:
                 url_api_2 = i['api_2']
                 print(f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}' + f'  {name}')
                 url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
-                pdfkit.from_url(url, os.path.join("test", date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
+                pdfkit.from_url(url, os.path.join(self.File_folder, self.electricity_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
         except:
             print('請求失敗', url)
 
+
+        #week
+
+
+        #month
+
         # open folder
-        start_directory = os.path.join("test", date) 
+        start_directory = os.path.join(self.File_folder,self.electricity_folder,date) 
         self.startfile(start_directory)
 
     # Finish Open the folder
@@ -190,7 +203,7 @@ class htmltopdf:
         # print(del_zero)
         return del_zero
     
-    def input_(self):
+    def input_str(self):
         while True:
             text=input('輸入格式，範例 2022-06: ')
             if len(text)==7 and int(text[:4]) >= 2022 and text[4] == '-' and text[:4].isnumeric() \
@@ -218,7 +231,8 @@ class htmltopdf:
 
 if __name__ == '__main__':
     my = htmltopdf()
-    my.Fire_call('2022-05')
+    # my.Fire_call('2022-05')
+    my.electricity('2022-05')
     # my.Fire_call('2022-03')
     # my.get_monthrange('2022-06')
     # my.electricity('2022-05')
