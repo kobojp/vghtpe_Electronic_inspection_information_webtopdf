@@ -1,4 +1,5 @@
 import json
+# from typing_extensions import Self
 import pdfkit
 import os
 import subprocess
@@ -6,6 +7,8 @@ from threading import Thread
 import calendar
 import threading
 from requests import delete
+from concurrent.futures import ThreadPoolExecutor
+
 
 # import requests
 
@@ -32,7 +35,7 @@ data資料結構
         每日
         每周
         每月
-    水力
+    排水
         每日
         每周
         每月
@@ -48,7 +51,7 @@ call法，在cmd上 顯示文字 下載消防報表 選擇A，電力報表選擇
 輸出資料夾結構
 6月消防報表
 6月電力報表
-6月水力報表
+6月給排水報表
 
 目前先想功能就好，數據慢慢手動建立
 打包後，寫一個下介面選單，12個月分並選擇後判斷當前是否是當月或是低於月份，超過則跳錯誤
@@ -88,9 +91,12 @@ class htmltopdf:
 
     # open all data
     # url json https://www.delftstack.com/zh-tw/howto/python/python-get-json-from-url/
-    with open("test_data.json", encoding="utf-8") as f: #Test usefile testdata.json
-        open_data = json.load(f) # json data
 
+    data_file = 'data.json' # #Test usefile testdata.json
+
+    with open(data_file , encoding="utf-8") as f:
+        open_data = json.load(f) # json data
+    
     def folder(self, folderpath_name):
     # 使用相對路徑且資料夾都在根目錄
         folderpath = folderpath_name 
@@ -119,7 +125,7 @@ class htmltopdf:
         count_file = []
         for i in self.open_data['Fire_Equipment']:
             count_file.append(i['name'])
-        print(f'共有{len(count_file)}個PDF')
+        print(f'{self.fire_folder} 共有 {len(count_file)} 個PDF')
 
         try:
             for i in self.open_data['Fire_Equipment']:
@@ -130,7 +136,7 @@ class htmltopdf:
                 url = f'http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}'
                 pdfkit.from_url(url, os.path.join(self.File_folder, self.fire_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
         except:
-            print('請求失敗', url)
+                print('請求失敗', url)
 
         # open folder
         start_directory = os.path.join(self.File_folder, self.fire_folder, date)
@@ -154,9 +160,18 @@ class htmltopdf:
         self.folder(os.path.join(self.File_folder,self.electricity_folder,date))  # 月
 
 
+
         # self.folder(os.path.join("test", date))  #建立資料夾
 
         date = date # ex : '2022-05'
+
+
+        count_file = []
+        for day,week,month in zip(self.open_data['electricity_every_day'],self.open_data['electricity_every_week'],self.open_data['electricity_every_month']):
+            count_file.append(day['name'])
+            count_file.append(week['name'])
+            count_file.append(month['name'])
+        print(f'{self.electricity_folder} 共有 {len(count_file)} 個PDF')
 
         # day
         try:
@@ -168,17 +183,122 @@ class htmltopdf:
                 url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
                 pdfkit.from_url(url, os.path.join(self.File_folder, self.electricity_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
         except:
-            print('請求失敗', url)
+                print('請求失敗', url)
 
 
         #week
+        try:
+            for i in self.open_data['electricity_every_week']:
+                name = i['name']
+                url_api_1 = i['api_1']
+                url_api_2 = i['api_2']
+                print(f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}' + f'  {name}')
+                url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
+                pdfkit.from_url(url, os.path.join(self.File_folder, self.electricity_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
+        except:
+                print('請求失敗', url)
 
 
         #month
+        try:
+            for i in self.open_data['electricity_every_month']:
+                if i['name'] == '中正樓24F停機坪照明設備巡檢紀錄':
+                    name = i['name']
+                    url_api_1 = i['api_1']
+                    url_api_2 = i['api_2']
+                    print(f'http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}' + f'  {name}')
+                    url = f'http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}'
+                    pdfkit.from_url(url, os.path.join(self.File_folder, self.electricity_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
+                    continue
+
+                name = i['name']
+                url_api_1 = i['api_1']
+                url_api_2 = i['api_2']
+                print(f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}' + f'  {name}')
+                url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
+                pdfkit.from_url(url, os.path.join(self.File_folder, self.electricity_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
+        except:
+                print('請求失敗', url)
+
 
         # open folder
         start_directory = os.path.join(self.File_folder,self.electricity_folder,date) 
         self.startfile(start_directory)
+
+    # 給排水設備
+    def drain(self, date:str):
+        """
+        api 結構
+        /Report6BatchAll/237/2022-05-01/2022-05-31/237/248
+        /Report6BatchAll/237/{2022-05}-01/{2022-05}-31/237/248
+
+        /Report6BatchAll/237/{2022-05}-01/{2022-05}-{getmotn}/237/248
+
+        使用批次檔案產生
+        """
+
+        #建立資料夾
+        self.folder(os.path.join(self.File_folder))  #水電消防報表
+        self.folder(os.path.join(self.File_folder,self.drain_folder))  #給排水
+        self.folder(os.path.join(self.File_folder,self.drain_folder,date))  # 月
+
+
+
+        # self.folder(os.path.join("test", date))  #建立資料夾
+
+        date = date # ex : '2022-05'
+
+
+        count_file = []
+        for day,week,month in zip(self.open_data['drain_day'],self.open_data['drain_week'],self.open_data['drain_month']):
+            count_file.append(day['name'])
+            count_file.append(week['name'])
+            count_file.append(month['name'])
+        print(f'{self.drain_folder} 共有 {len(count_file)} 個PDF')
+
+        # day
+        try:
+            for i in self.open_data['drain_day']:
+                name = i['name']
+                url_api_1 = i['api_1']
+                url_api_2 = i['api_2']
+                print(f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}' + f'  {name}')
+                url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
+                pdfkit.from_url(url, os.path.join(self.File_folder, self.drain_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
+        except:
+                print('請求失敗', url)
+
+
+        #week
+        try:
+            for i in self.open_data['drain_week']:
+                name = i['name']
+                url_api_1 = i['api_1']
+                url_api_2 = i['api_2']
+                print(f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}' + f'  {name}')
+                url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
+                pdfkit.from_url(url, os.path.join(self.File_folder, self.drain_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
+        except:
+                print('請求失敗', url)
+
+
+        #month
+        try:
+            for i in self.open_data['drain_month']:
+                name = i['name']
+                url_api_1 = i['api_1']
+                url_api_2 = i['api_2']
+                print(f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}' + f'  {name}')
+                url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
+                pdfkit.from_url(url, os.path.join(self.File_folder, self.drain_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
+        except:
+                print('請求失敗', url)
+
+
+        # open folder
+        start_directory = os.path.join(self.File_folder,self.drain_folder,date) 
+        self.startfile(start_directory)
+
 
     # Finish Open the folder
     def startfile(sele, filename):
@@ -192,7 +312,7 @@ class htmltopdf:
         month = sele.delete_left_zero(date)
         year = date.split('-')[0]
         day = calendar.monthrange(int(year),int(month))
-        print(f'{date} 月份天數 {day[1]}')
+        # print(f'{date} 月份天數 {day[1]}')
         return day[1]
         
 
@@ -242,7 +362,7 @@ class htmltopdf:
 
         """
 
-        for i in self.open_data['Fire_Equipment']:
+        for i in self.open_data['electricity_every_week']:
             name = i['name']
             url_api_1 = i['api_1']
             url_api_2 = i['api_2']
@@ -250,13 +370,21 @@ class htmltopdf:
             if url_api_1 == 'input' or url_api_2 == 'input':
                 continue
             else:
-                print(url_api_1)
+                print(url_api_2)
         
 
 if __name__ == '__main__':
     my = htmltopdf()
+    # my.Data_verification()
+    # my.drain('2022-05')
+
+with ThreadPoolExecutor() as executor:    # 改用 with...as
+    executor.submit(my.electricity, '2022-05')
+    executor.submit(my.drain , '2022-05')
+
+
     # my.Fire_call('2022-05')
-    my.electricity('2022-05')
+    # my.electricity('2022-05')
     # my.Fire_call('2022-03')
     # my.get_monthrange('2022-06')
     # my.electricity('2022-05')
