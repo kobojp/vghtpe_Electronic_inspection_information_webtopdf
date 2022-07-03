@@ -1,29 +1,22 @@
+from distutils import ccompiler
 import json
+from turtle import back
 # from typing_extensions import Self
 import pdfkit
 import os
 import subprocess
 from threading import Thread
 import calendar
-import threading
-from requests import delete
+# import threading
 from concurrent.futures import ThreadPoolExecutor
+import datetime
+import time
+import colorama
+from colorama import Fore
+from colorama import Style
 
-
-# import requests
 
 """
-
-輸入使用
-text = input('')
-li = ['2022-01', '2020-02', '2020-03', '2020-04', '2020-05', '2020-06', '2020-07', '2020-08', '2020-09', '2020-10']
-[i for i in li if '2022-01' == text][0]
-
-每日批次API結構
-http://210.61.217.104/Report6BatchAll/237/2022-05-01/2022-05-31/237/248
-每周
-http://210.61.217.104/Report6BatchAll/214/2022-05-01/2022-05-31/214/225
-
 分3條線程
     消防
     電力
@@ -39,38 +32,11 @@ data資料結構
         每日
         每周
         每月
-寫好電 水就copy就好
 
-call法，在cmd上 顯示文字 下載消防報表 選擇A，電力報表選擇B、水力報表選擇C，全部選擇all
-
-限制性輸入取當前年分01~12月如 2020-01
-
-水：每日、每周、月份，各一個funtion
-電：每日、每周、月份，各一個funtion
-
-輸出資料夾結構
-6月消防報表
-6月電力報表
-6月給排水報表
-
-目前先想功能就好，數據慢慢手動建立
-打包後，寫一個下介面選單，12個月分並選擇後判斷當前是否是當月或是低於月份，超過則跳錯誤
-輸出完成跳出資料夾
-將data.json放到github web上，再用request讀取，方便新增資料
-新增功能
-    當前路徑建立資料夾，判斷資料夾是否存在，以月分建檔名，5月消防月報表
-colab 上處理，全部轉換後並一次上傳到drive，使用rclone工具
-高階一點的寫法
-    5個線程處理
 wkhtmltopdf doc
  https://wkhtmltopdf.org/usage/wkhtmltopdf.txt
 套件 
  https://pypi.org/project/pdfkit/
-不更改環境變數
-import pdfkit
-path_wkhtmltopdf = r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe' 取當前路徑並接合 os.path.join("root", "directory1", "directory2")
-config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
-pdfkit.from_url("http://google.com", "out.pdf", configuration=config)
 """
 
 class htmltopdf:
@@ -80,18 +46,20 @@ class htmltopdf:
         self.electricity_folder = electricity_folder
         self.drain_folder = drain
 
+    colorama.init(autoreset=True)
     # wkhtmltopdf Path setting
-    path_wkhtmltopdf = os.path.join(os.getcwd(), 'wkhtmltox\\bin', 'wkhtmltopdf.exe')
+    # path_wkhtmltopdf = os.path.join(os.getcwd(), 'wkhtmltox\\bin', 'wkhtmltopdf.exe')
+    path_wkhtmltopdf = os.path.join('wkhtmltox\\bin','wkhtmltopdf.exe')
     config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
 
     # PDF output settings
     options = {
     'no-background': None
     }
-
+    
     # open all data
     # url json https://www.delftstack.com/zh-tw/howto/python/python-get-json-from-url/
-
+    
     data_file = 'data.json' # #Test usefile testdata.json
 
     with open(data_file , encoding="utf-8") as f:
@@ -110,10 +78,14 @@ class htmltopdf:
     
     #消防設備
     def Fire_call(self, date:str):
+        """
+        消防設備
+        輸入值 YYYY-DD
+        """
+
         date = date  # ex : '2022-05'
 
         #建立資料夾
-        self.folder(os.path.join(self.File_folder))  #水電消防報表
         self.folder(os.path.join(self.File_folder,self.fire_folder))  #消防
         self.folder(os.path.join(self.File_folder,self.fire_folder,date))  # 月
 
@@ -121,18 +93,18 @@ class htmltopdf:
         #     p = json.load(f) # json data
 
     
-        # 寫一個匿名funtion 計算多少筆檔案，抓name(使用len)
+        # count file
         count_file = []
         for i in self.open_data['Fire_Equipment']:
             count_file.append(i['name'])
-        print(f'{self.fire_folder} 共有 {len(count_file)} 個PDF')
+        print(f'{self.fire_folder} 共有 {len(count_file)} 個PDF\n')
 
         try:
             for i in self.open_data['Fire_Equipment']:
                 name = i['name']
                 url_api_1 = i['api_1']
                 url_api_2 = i['api_2']
-                print(f'http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}' + f'  {name}')
+                print(f'{self.get_now_date()}  http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}' + f'  {Fore.RED}{Style.BRIGHT}{name}{Style.RESET_ALL}\n')
                 url = f'http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}'
                 pdfkit.from_url(url, os.path.join(self.File_folder, self.fire_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
         except:
@@ -145,6 +117,9 @@ class htmltopdf:
     # 電力設備
     def electricity(self, date:str):
         """
+        電力
+        輸入值 YYYY-DD
+
         api 結構
         /Report6BatchAll/237/2022-05-01/2022-05-31/237/248
         /Report6BatchAll/237/{2022-05}-01/{2022-05}-31/237/248
@@ -155,7 +130,7 @@ class htmltopdf:
         """
 
         #建立資料夾
-        self.folder(os.path.join(self.File_folder))  #水電消防報表
+        # self.folder(os.path.join(self.File_folder))  #水電消防報表
         self.folder(os.path.join(self.File_folder,self.electricity_folder))  #電力
         self.folder(os.path.join(self.File_folder,self.electricity_folder,date))  # 月
 
@@ -166,12 +141,8 @@ class htmltopdf:
         date = date # ex : '2022-05'
 
 
-        count_file = []
-        for day,week,month in zip(self.open_data['electricity_every_day'],self.open_data['electricity_every_week'],self.open_data['electricity_every_month']):
-            count_file.append(day['name'])
-            count_file.append(week['name'])
-            count_file.append(month['name'])
-        print(f'{self.electricity_folder} 共有 {len(count_file)} 個PDF')
+        # file count
+        self.count_file('electricity_every')
 
         # day
         try:
@@ -179,7 +150,7 @@ class htmltopdf:
                 name = i['name']
                 url_api_1 = i['api_1']
                 url_api_2 = i['api_2']
-                print(f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}' + f'  {name}')
+                print(f'{self.get_now_date()} http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}' + f'  {Fore.BLUE}{Style.BRIGHT}{name}{Style.RESET_ALL}\n')
                 url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
                 pdfkit.from_url(url, os.path.join(self.File_folder, self.electricity_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
         except:
@@ -192,7 +163,7 @@ class htmltopdf:
                 name = i['name']
                 url_api_1 = i['api_1']
                 url_api_2 = i['api_2']
-                print(f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}' + f'  {name}')
+                print(f'{self.get_now_date()} http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}' + f'  {Fore.BLUE}{Style.BRIGHT}{name}{Style.RESET_ALL}\n')
                 url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
                 pdfkit.from_url(url, os.path.join(self.File_folder, self.electricity_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
         except:
@@ -206,7 +177,7 @@ class htmltopdf:
                     name = i['name']
                     url_api_1 = i['api_1']
                     url_api_2 = i['api_2']
-                    print(f'http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}' + f'  {name}')
+                    print(f'{self.get_now_date()} http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}' + f'  {Fore.BLUE}{Style.BRIGHT}{name}{Style.RESET_ALL}\n')
                     url = f'http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}'
                     pdfkit.from_url(url, os.path.join(self.File_folder, self.electricity_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
                     continue
@@ -214,7 +185,7 @@ class htmltopdf:
                 name = i['name']
                 url_api_1 = i['api_1']
                 url_api_2 = i['api_2']
-                print(f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}' + f'  {name}')
+                print(f'{self.get_now_date()} http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}' + f'  {Fore.BLUE}{Style.BRIGHT}{name}{Style.RESET_ALL}\n')
                 url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
                 pdfkit.from_url(url, os.path.join(self.File_folder, self.electricity_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
         except:
@@ -228,17 +199,18 @@ class htmltopdf:
     # 給排水設備
     def drain(self, date:str):
         """
+        給排水設備
+        輸入值 YYYY-DD
+
         api 結構
         /Report6BatchAll/237/2022-05-01/2022-05-31/237/248
         /Report6BatchAll/237/{2022-05}-01/{2022-05}-31/237/248
-
         /Report6BatchAll/237/{2022-05}-01/{2022-05}-{getmotn}/237/248
-
         使用批次檔案產生
         """
 
         #建立資料夾
-        self.folder(os.path.join(self.File_folder))  #水電消防報表
+        # self.folder(os.path.join(self.File_folder))  #水電消防報表
         self.folder(os.path.join(self.File_folder,self.drain_folder))  #給排水
         self.folder(os.path.join(self.File_folder,self.drain_folder,date))  # 月
 
@@ -249,25 +221,22 @@ class htmltopdf:
         date = date # ex : '2022-05'
 
 
-        count_file = []
-        for day,week,month in zip(self.open_data['drain_day'],self.open_data['drain_week'],self.open_data['drain_month']):
-            count_file.append(day['name'])
-            count_file.append(week['name'])
-            count_file.append(month['name'])
-        print(f'{self.drain_folder} 共有 {len(count_file)} 個PDF')
+        # file count
+        self.count_file('drain')
 
+        # start_time = time.time() # START
+        
         # day
         try:
             for i in self.open_data['drain_day']:
                 name = i['name']
                 url_api_1 = i['api_1']
                 url_api_2 = i['api_2']
-                print(f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}' + f'  {name}')
+                print(f'{self.get_now_date()} http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}' + f'  {Fore.GREEN}{Style.BRIGHT}{name}{Style.RESET_ALL}\n')
                 url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
                 pdfkit.from_url(url, os.path.join(self.File_folder, self.drain_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
         except:
                 print('請求失敗', url)
-
 
         #week
         try:
@@ -275,12 +244,11 @@ class htmltopdf:
                 name = i['name']
                 url_api_1 = i['api_1']
                 url_api_2 = i['api_2']
-                print(f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}' + f'  {name}')
+                print(f'{self.get_now_date()} http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}' + f'  {Fore.GREEN}{Style.BRIGHT}{name}{Style.RESET_ALL}\n')
                 url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
                 pdfkit.from_url(url, os.path.join(self.File_folder, self.drain_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
         except:
                 print('請求失敗', url)
-
 
         #month
         try:
@@ -288,12 +256,11 @@ class htmltopdf:
                 name = i['name']
                 url_api_1 = i['api_1']
                 url_api_2 = i['api_2']
-                print(f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}' + f'  {name}')
+                print(f'{self.get_now_date()} http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}' + f'  {Fore.GREEN}{Style.BRIGHT}{name}{Style.RESET_ALL}\n')
                 url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
                 pdfkit.from_url(url, os.path.join(self.File_folder, self.drain_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
         except:
                 print('請求失敗', url)
-
 
         # open folder
         start_directory = os.path.join(self.File_folder,self.drain_folder,date) 
@@ -324,8 +291,12 @@ class htmltopdf:
         return del_zero
     
     def input_str(self):
+        """
+        call使用，限制格式，YYYY-MM
+        """
+        
         while True:
-            text=input('輸入格式，範例 2022-06: ')
+            text=input(f'輸入格式，範例： {self.get_date()} ：')
             if len(text)==7 and int(text[:4]) >= 2022 and text[4] == '-' and text[:4].isnumeric() \
                 and len(text[:4]) == 4 and text[5:7].isnumeric()\
                 and len(text[5:7]) == 2 and int(text[5:7]) >= 1 and int(text[5:7]) <= 12:
@@ -335,19 +306,18 @@ class htmltopdf:
         print('Valid input')
         return text
 
-
-    # thread
-    def start_thread(self, thread_number, call, thread_name:str):
+    #Current date
+    def get_date(self):
         """
-        重寫
+        取得現在年、月、日，以電腦時間為準
         """
-        
-
-        try:
-            threading.Thread(target=call, args=(thread_number,))
-            Thread()
-        except:
-            print(f'失敗第{thread_name}線程') 
+        get_year = datetime.datetime.now().year
+        get_month = datetime.datetime.now().month-1 #下載上個月報表，減一個月
+        get_day = datetime.datetime.now().day
+        dt = datetime.datetime(get_year, get_month, get_day)
+        # print(dt.strftime('%Y-%m-%d'))
+        return dt.strftime('%Y-%m')
+    
     
     # 資料API測試正確性
     def Data_verification(self):
@@ -372,48 +342,304 @@ class htmltopdf:
             else:
                 print(url_api_2)
         
+    def count_file(self,type_name:str):
+        """
+        電力、排水計算檔案統計使用
+        type_name: type
+            電力 electricity_every
+            排水 drain
+        """
+
+        # for day,week,month in zip(self.open_data['drain_day'],self.open_data['drain_month'],self.open_data['drain_week']):
+        #     print(day['name'])
+        #     print(week['name'])
+        #     print(month['name'])
+        count_file = []
+        month  = [i['name'] for i in self.open_data[f'{type_name}_month']]
+        day  = [i['name'] for i in self.open_data[f'{type_name}_day']]
+        week  = [i['name'] for i in self.open_data[f'{type_name}_week']]
+
+        count_file += month + day + week
+
+        name = {'electricity_every':'電力','drain':'排水',}
+
+        print(f'{name[type_name]} 共有 {len(count_file)} 個PDF')
+
+    def General_folder(self):
+        """
+        判斷建立共用資料夾 "水電消防報表"
+        """
+        self.folder(os.path.join(self.File_folder))  #水電消防報表
+
+    def get_now_date(self):
+        now = datetime.datetime.now()
+        current_time = now.strftime(f"{Fore.BLUE}{Style.BRIGHT}%H:%M:%S{Style.RESET_ALL}")
+        return current_time
+
+    # 以下是 call 程式 main
+
+    def seletct_input(self):
+        
+        text = f""" 
+            {Fore.GREEN}{Style.BRIGHT}消防、電力、排水一起自動下載{Style.RESET_ALL}
+            {Fore.WHITE}{Style.BRIGHT}輸入{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}A{Style.RESET_ALL} {Fore.WHITE}{Style.BRIGHT}全自動 ，當月執行程式會自動下載上個月報表{Style.RESET_ALL}
+            {Fore.WHITE}{Style.BRIGHT}輸入{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}B{Style.RESET_ALL}  {Fore.WHITE}{Style.BRIGHT}手動輸入 年月，範例：2022-03{Style.RESET_ALL}
+            ====================================================================
+            {Fore.GREEN}{Style.BRIGHT}選擇單一種類別輸出{Style.RESET_ALL}
+            {Fore.WHITE}{Style.BRIGHT}輸入{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}F{Style.RESET_ALL} {Fore.WHITE}{Style.BRIGHT}消防{Style.RESET_ALL}
+            {Fore.WHITE}{Style.BRIGHT}輸入{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}C{Style.RESET_ALL} {Fore.WHITE}{Style.BRIGHT}電力{Style.RESET_ALL}
+            {Fore.WHITE}{Style.BRIGHT}輸入{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}D{Style.RESET_ALL} {Fore.WHITE}{Style.BRIGHT}排水{Style.RESET_ALL}
+            ====================================================================
+            {Fore.WHITE}{Style.BRIGHT}輸入{Style.RESET_ALL} {Fore.YELLOW}{Style.BRIGHT}X{Style.RESET_ALL} {Fore.WHITE}{Style.BRIGHT}取消(關閉){Style.RESET_ALL}
+            {Style.RESET_ALL}
+        """
+        # print(text)
+
+        Manually_text = f"""
+            {Fore.GREEN}{Style.BRIGHT}選擇下載模式{Style.RESET_ALL}
+            {Fore.WHITE}{Style.BRIGHT}輸入{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}0{Style.RESET_ALL} {Fore.WHITE}{Style.BRIGHT}自動下載上個月報表{Style.RESET_ALL}
+            {Fore.WHITE}{Style.BRIGHT}輸入{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}1{Style.RESET_ALL} {Fore.WHITE}{Style.BRIGHT}指定年月報表{Style.RESET_ALL}
+        """
+
+        text_1 = f"""
+            {Fore.WHITE}{Style.BRIGHT}【輸入數字】{Style.RESET_ALL}
+            {Fore.RED}{Style.BRIGHT}0{Style.RESET_ALL}{Fore.WHITE}{Style.BRIGHT}=自動下載上個月報表{Style.RESET_ALL}
+            {Fore.RED}{Style.BRIGHT}1{Style.RESET_ALL}{Fore.WHITE}{Style.BRIGHT}=手動指定日期報表{Style.RESET_ALL}
+            """
+
+        while True:
+            print(text)
+            seletct_input = input(f'{Fore.GREEN}{Style.BRIGHT}選擇模式{Style.RESET_ALL}{Fore.YELLOW}{Style.BRIGHT}(大小寫皆可){Style.RESET_ALL}：')
+            if seletct_input == 'A' or seletct_input == 'a':
+
+                """
+                輸入 A 全自動
+                """
+                date = self.get_date()
+                print(f'自動下載，下載報表日期 {date}')
+
+                # 計算run時間
+                start_time = time.time() # START
+
+                # code
+                with ThreadPoolExecutor(max_workers=10) as executor: 
+                    executor.submit(my.Fire_call, date)
+                    executor.submit(my.electricity , date)
+                    executor.submit(my.drain , date)
+
+                
+                end_time = time.time() # END
+                    
+                # 時間處理
+                Time_timing = end_time - start_time
+                if int(Time_timing) >= 60 :
+                    time_sum = int(Time_timing) / 60
+                    print(f'已下載完成，總花費時間 {int(time_sum)} 分鐘')
+                else:
+                    print(f'{int(Time_timing)} 秒')            
+
+                
+                # break
+            elif seletct_input == 'B' or seletct_input == 'b':
+                Manually = self.input_str()
+                """
+                輸入 B 手動輸入
+                """
+
+                print(f'輸入的日期 {Manually}')
+                
+                # 計算run時間
+                start_time = time.time() # START
+
+                # code
+                with ThreadPoolExecutor(max_workers=10) as executor: 
+                    executor.submit(my.Fire_call, Manually)
+                    executor.submit(my.electricity , Manually)
+                    executor.submit(my.drain , Manually)
+
+                end_time = time.time() # END
+                    
+                # 時間處理
+                Time_timing = end_time - start_time
+                if int(Time_timing) >= 60 :
+                    time_sum = int(Time_timing) / 60
+                    print(f'已下載完成，總花費時間 {int(time_sum)} 分鐘')
+                else:
+                    print(f'{int(Time_timing)} 秒')  
+
+            elif seletct_input == 'F'or seletct_input == 'f':
+                """
+                輸入 F 消防
+                自動輸入
+                指定日期
+                """
+                print(f'{Fore.WHITE}{Style.BRIGHT}目前選擇{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}消防{Style.RESET_ALL}')
+                print(Manually_text)
+                seletct = input(f'{text_1}')
+
+                if seletct == '0':
+                    print(f'F {self.get_date()}')
+
+                    # 計算run時間
+                    start_time = time.time() # START
+
+                    #code
+                    self.Fire_call(self.get_date())
+
+                    end_time = time.time() # END
+                        
+                    # 時間處理
+                    Time_timing = end_time - start_time
+                    if int(Time_timing) >= 60 :
+                        time_sum = int(Time_timing) / 60
+                        print(f'已下載完成，總花費時間 {int(time_sum)} 分鐘')
+                    else:
+                        print(f'{int(Time_timing)} 秒')
+
+                    # break
+                elif seletct == '1':
+                    Manually = self.input_str()
+                    print(f'F {Manually}')
+                    
+                    # 計算run時間
+                    start_time = time.time() # START
+
+                    #code
+                    self.Fire_call(self.get_date(Manually))
+
+                    end_time = time.time() # END
+                        
+                    # 時間處理
+                    Time_timing = end_time - start_time
+                    if int(Time_timing) >= 60 :
+                        time_sum = int(Time_timing) / 60
+                        print(f'已下載完成，總花費時間 {int(time_sum)} 分鐘')
+                    else:
+                        print(f'{int(Time_timing)} 秒')
+
+                    # break
+            elif seletct_input == 'C' or seletct_input =='c':
+                """
+                輸入 C 電力
+                自動輸入
+                指定日期
+                """
+                print(f'{Fore.WHITE}{Style.BRIGHT}目前選擇{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}電力{Style.RESET_ALL}')
+                print(Manually_text)
+                seletct = input(f'{text_1}')
+
+                if seletct == '0':
+                    print(f'F {self.get_date()}')
+                    
+                    # 計算run時間
+                    start_time = time.time() # START
+
+                    #code
+                    self.electricity(self.get_date())
+
+                    end_time = time.time() # END
+                        
+                    # 時間處理
+                    Time_timing = end_time - start_time
+                    if int(Time_timing) >= 60 :
+                        time_sum = int(Time_timing) / 60
+                        print(f'已下載完成，總花費時間 {int(time_sum)} 分鐘')
+                    else:
+                        print(f'{int(Time_timing)} 秒')                    
+                    # break
+                elif seletct == '1':
+                    Manually = self.input_str()
+                    print(f'C {Manually}')
+                    
+
+                    # 計算run時間
+                    start_time = time.time() # START
+
+                    #code
+                    self.electricity(Manually)
+
+                    end_time = time.time() # END
+                        
+                    # 時間處理
+                    Time_timing = end_time - start_time
+                    if int(Time_timing) >= 60 :
+                        time_sum = int(Time_timing) / 60
+                        print(f'已下載完成，總花費時間 {int(time_sum)} 分鐘')
+                    else:
+                        print(f'{int(Time_timing)} 秒')
+
+                    # break
+            elif seletct_input == 'D' or seletct_input == 'd':
+                """
+                輸入 D 排水
+                自動輸入
+                指定日期
+                """
+                print(f'{Fore.WHITE}{Style.BRIGHT}目前選擇{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}排水{Style.RESET_ALL}')
+                print(Manually_text)
+                seletct = input(f'{text_1}')
+
+                if seletct == '0':
+                    print(f'F {self.get_date()}')
+                   
+                   # 計算run時間
+                    start_time = time.time() # START
+
+                    #code
+                    self.drain(self.get_date())
+
+                    end_time = time.time() # END
+                        
+                    # 時間處理
+                    Time_timing = end_time - start_time
+                    if int(Time_timing) >= 60 :
+                        time_sum = int(Time_timing) / 60
+                        print(f'已下載完成，總花費時間 {int(time_sum)} 分鐘')
+                    else:
+                        print(f'{int(Time_timing)} 秒')
+                    
+                    # break
+                elif seletct == '1':
+                    Manually = self.input_str()
+                    print(f'D {Manually}')
+                    
+                    # 計算run時間
+                    start_time = time.time() # START
+
+                    #code
+                    self.drain(Manually)
+
+                    end_time = time.time() # END
+                        
+                    # 時間處理
+                    Time_timing = end_time - start_time
+                    if int(Time_timing) >= 60 :
+                        time_sum = int(Time_timing) / 60
+                        print(f'已下載完成，總花費時間 {int(time_sum)} 分鐘')
+                    else:
+                        print(f'{int(Time_timing)} 秒')
+
+                    # break
+            elif seletct_input == 'X' or seletct_input == 'x':
+                print('關閉視窗')
+                os.exit()
+            else:
+                print(text)
+                print('輸入錯誤，請依說明入正確的格式')
+                
 
 if __name__ == '__main__':
     my = htmltopdf()
-    # my.Data_verification()
-    # my.drain('2022-05')
+    my.General_folder()
 
-with ThreadPoolExecutor() as executor:    # 改用 with...as
-    executor.submit(my.electricity, '2022-05')
-    executor.submit(my.drain , '2022-05')
+    print(
+        f'{Fore.WHITE}{Style.BRIGHT}開源程式碼：https://github.com/kobojp/vghtpe_Electronic_inspection_information_webtopdf{Style.RESET_ALL}\n'
+        f'{Fore.YELLOW}{Style.BRIGHT}自動下載水電消防日周月報表轉PDF檔{Style.RESET_ALL}'
+    )
 
-
-    # my.Fire_call('2022-05')
-    # my.electricity('2022-05')
-    # my.Fire_call('2022-03')
-    # my.get_monthrange('2022-06')
-    # my.electricity('2022-05')
-    
-    # date = input('')
-
-    # my.delete_left_zero('2022-06')
-    # pdfkit.from_url('http://210.61.217.104/Report6/82/2022-05/82/98', os.path.join("test", 'abc11') + '.pdf', options=options, configuration=config)
+    my.seletct_input()
 
 
-## 測試資料正確性
-    # with open("data.json", encoding="utf-8") as f:
-    #     p = json.load(f) # json data
-
-    # for i in p['Fire_Equipment']:
-    #     name = i['name']
-    #     url_api_1 = i['api_1']
-    #     url_api_2 = i['api_2']
-
-    #     if url_api_1 == 'input' or url_api_2 == 'input':
-    #         continue
-    #     else:
-    #         print(url_api_1)
-
-        # print(url_api_2)
-
-"""
-異部
-open file一個區塊
-pdfkit一個區塊，達成條件就call
-計算每跑20筆資料一個線程
-"""
+    """
+    已知問題 input無法使用顏色
+    """
