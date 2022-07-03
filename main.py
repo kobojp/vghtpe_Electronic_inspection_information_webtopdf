@@ -399,6 +399,7 @@ class htmltopdf:
             {Fore.GREEN}{Style.BRIGHT}選擇下載模式{Style.RESET_ALL}
             {Fore.WHITE}{Style.BRIGHT}輸入{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}0{Style.RESET_ALL} {Fore.WHITE}{Style.BRIGHT}自動下載上個月報表{Style.RESET_ALL}
             {Fore.WHITE}{Style.BRIGHT}輸入{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}1{Style.RESET_ALL} {Fore.WHITE}{Style.BRIGHT}指定年月報表{Style.RESET_ALL}
+            {Fore.WHITE}{Style.BRIGHT}輸入{Style.RESET_ALL} {Fore.YELLOW}{Style.BRIGHT}exit{Style.RESET_ALL} {Fore.WHITE}{Style.BRIGHT}回主選單{Style.RESET_ALL}
         """
 
         text_1 = f"""
@@ -409,7 +410,9 @@ class htmltopdf:
 
         while True:
             print(text)
-            seletct_input = input(f'{Fore.GREEN}{Style.BRIGHT}選擇模式{Style.RESET_ALL}{Fore.YELLOW}{Style.BRIGHT}(大小寫皆可){Style.RESET_ALL}：')
+            print(f'{Fore.GREEN}{Style.BRIGHT}選擇模式{Style.RESET_ALL}{Fore.YELLOW}{Style.BRIGHT}(大小寫皆可){Style.RESET_ALL}') 
+            seletct_input = input(f'：')
+
             if seletct_input == 'A' or seletct_input == 'a':
 
                 """
@@ -475,7 +478,8 @@ class htmltopdf:
                 """
                 print(f'{Fore.WHITE}{Style.BRIGHT}目前選擇{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}消防{Style.RESET_ALL}')
                 print(Manually_text)
-                seletct = input(f'{text_1}')
+                print(text_1)
+                seletct = input(f'：')
 
                 if seletct == '0':
                     print(f'F {self.get_date()}')
@@ -505,7 +509,7 @@ class htmltopdf:
                     start_time = time.time() # START
 
                     #code
-                    self.Fire_call(self.get_date(Manually))
+                    self.Fire_call(Manually)
 
                     end_time = time.time() # END
                         
@@ -526,7 +530,8 @@ class htmltopdf:
                 """
                 print(f'{Fore.WHITE}{Style.BRIGHT}目前選擇{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}電力{Style.RESET_ALL}')
                 print(Manually_text)
-                seletct = input(f'{text_1}')
+                print(text_1)
+                seletct = input(f'：')
 
                 if seletct == '0':
                     print(f'F {self.get_date()}')
@@ -567,7 +572,7 @@ class htmltopdf:
                         print(f'已下載完成，總花費時間 {int(time_sum)} 分鐘')
                     else:
                         print(f'{int(Time_timing)} 秒')
-
+                    
                     # break
             elif seletct_input == 'D' or seletct_input == 'd':
                 """
@@ -577,7 +582,8 @@ class htmltopdf:
                 """
                 print(f'{Fore.WHITE}{Style.BRIGHT}目前選擇{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}排水{Style.RESET_ALL}')
                 print(Manually_text)
-                seletct = input(f'{text_1}')
+                print(text_1)
+                seletct = input(f'：')
 
                 if seletct == '0':
                     print(f'F {self.get_date()}')
@@ -596,8 +602,7 @@ class htmltopdf:
                         time_sum = int(Time_timing) / 60
                         print(f'已下載完成，總花費時間 {int(time_sum)} 分鐘')
                     else:
-                        print(f'{int(Time_timing)} 秒')
-                    
+                        print(f'{int(Time_timing)} 秒')                    
                     # break
                 elif seletct == '1':
                     Manually = self.input_str()
@@ -641,5 +646,6 @@ if __name__ == '__main__':
 
 
     """
-    已知問題 input無法使用顏色
+    改善問題 線程改成 threading
+    https://www.runoob.com/python3/python3-multithreading.html
     """
