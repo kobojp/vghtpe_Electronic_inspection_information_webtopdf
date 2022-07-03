@@ -7,7 +7,7 @@ import os
 import subprocess
 from threading import Thread
 import calendar
-# import threading
+import _thread
 from concurrent.futures import ThreadPoolExecutor
 import datetime
 import time
@@ -39,7 +39,8 @@ wkhtmltopdf doc
  https://pypi.org/project/pdfkit/
 """
 
-class htmltopdf:
+
+class htmltopdf():
     def __init__(self, File_folder='水電消防報表',  fire='消防', electricity_folder='電力', drain='排水'):
         self.File_folder = File_folder # Share
         self.fire_folder = fire
@@ -425,12 +426,14 @@ class htmltopdf:
                 start_time = time.time() # START
 
                 # code
-                with ThreadPoolExecutor(max_workers=10) as executor: 
-                    executor.submit(my.Fire_call, date)
-                    executor.submit(my.electricity , date)
-                    executor.submit(my.drain , date)
+                # with ThreadPoolExecutor(max_workers=10) as executor: 
+                #     executor.submit(my.Fire_call, date)
+                #     executor.submit(my.electricity , date)
+                #     executor.submit(my.drain , date)
+                _thread.start_new_thread(my.Fire_call, (date, ))
+                _thread.start_new_thread(my.electricity, (date, ))
+                _thread.start_new_thread(my.drain, (date, ))
 
-                
                 end_time = time.time() # END
                     
                 # 時間處理
@@ -455,11 +458,15 @@ class htmltopdf:
                 start_time = time.time() # START
 
                 # code
-                with ThreadPoolExecutor(max_workers=10) as executor: 
-                    executor.submit(my.Fire_call, Manually)
-                    executor.submit(my.electricity , Manually)
-                    executor.submit(my.drain , Manually)
+                # with ThreadPoolExecutor(max_workers=10) as executor: 
+                #     executor.submit(my.Fire_call, Manually)
+                #     executor.submit(my.electricity , Manually)
+                #     executor.submit(my.drain , Manually)
 
+                _thread.start_new_thread(my.Fire_call, (Manually, ))
+                _thread.start_new_thread(my.electricity, (Manually, ))
+                _thread.start_new_thread(my.drain, (Manually, ))
+                
                 end_time = time.time() # END
                     
                 # 時間處理
