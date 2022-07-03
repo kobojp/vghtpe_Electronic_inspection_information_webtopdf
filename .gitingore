@@ -8,7 +8,6 @@ build/*
 dist/*
 dist/main/*
 dist/wkhtmltox/*
-.gitingore
 dist/*
 build/
-
+.gitingore
