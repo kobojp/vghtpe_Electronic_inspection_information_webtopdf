@@ -93,3 +93,6 @@ spec文件設定，加入wkhtmltox、data.jso
 binaries=[('wkhtmltox/bin/', 'wkhtmltox/bin/')],
 datas=[('data.json', '.')],
 ```
+
+## 新增文字輸入功能
+![](./media/2022-07-03-21-29-58.png)
