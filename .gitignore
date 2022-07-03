@@ -1,0 +1,16 @@
+test.py
+main_UI.py
+test_1.py
+test_1.spec
+test.pdf
+test.py
+test_data.json
+build/*
+dist/*
+dist/main/*
+dist/wkhtmltox/*
+dist/*
+build/
+.gitingore
+dist/
+wkhtmltopdf.exe
