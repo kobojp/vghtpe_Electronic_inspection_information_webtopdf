@@ -7,6 +7,8 @@ name = "pypi"
 pyqt5 = "*"
 pyqtwebengine = "*"
 pdfkit = "*"
+pyinstaller = "*"
+colorama = "*"
 
 [dev-packages]
 

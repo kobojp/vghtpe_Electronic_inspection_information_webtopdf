@@ -78,3 +78,11 @@ options = {
 
 
 
+## pyinstaller build
+
+```
+pyinstaller main.py --add-data "data.json;." --add-binary "wkhtmltox/bin/wkhtmltopdf.exe;wkhtmltox/bin/"
+```
+
+  binaries=[('wkhtmltox/bin/', 'wkhtmltox/bin/')],
+  datas=[('data.json', '.')],
