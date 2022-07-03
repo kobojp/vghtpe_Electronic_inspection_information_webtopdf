@@ -10,5 +10,5 @@ dist/main/*
 dist/wkhtmltox/*
 .gitingore
 dist/*
-build/*
+build/
 
