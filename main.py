@@ -436,17 +436,15 @@ class htmltopdf():
                 # _thread.start_new_thread(my.electricity, (date, ))
                 # _thread.start_new_thread(my.drain, (date, ))
 
-                # Fire_Thread = threading.Thread(target = my.Fire_call, args = (date,))
+                
                 electricity_Thread = threading.Thread(target = my.electricity, args = (date,))
                 drain_Thread = threading.Thread(target = my.drain, args = (date,))
-                
-                # Fire_Thread.start()
+            
                 electricity_Thread.start()
                 drain_Thread.start()
 
-                #Fire當主程序可以不用加入Thread
+                my.Fire_call(date)
                 
-                # Fire_Thread.join()
                 electricity_Thread.join()
                 drain_Thread.join()
 
@@ -483,15 +481,17 @@ class htmltopdf():
                 # _thread.start_new_thread(my.Fire_call, (Manually, ))
                 # _thread.start_new_thread(my.electricity, (Manually, ))
                 # _thread.start_new_thread(my.drain, (Manually, ))
-                Fire_Thread = threading.Thread(target = my.Fire_call, args = (Manually,))
+                # Fire_Thread = threading.Thread(target = my.Fire_call, args = (Manually,))
                 electricity_Thread = threading.Thread(target = my.electricity, args = (Manually,))
                 drain_Thread = threading.Thread(target = my.drain, args = (Manually,))
                 
-                Fire_Thread.start()
+                # Fire_Thread.start()
                 electricity_Thread.start()
                 drain_Thread.start()
 
-                Fire_Thread.join()
+                my.Fire_call(Manually)
+
+                # Fire_Thread.join()
                 electricity_Thread.join()
                 drain_Thread.join()
 
@@ -681,19 +681,6 @@ if __name__ == '__main__':
 
 
     """
-    改善問題 線程改成 threading
-    https://www.runoob.com/python3/python3-multithreading.html
-    https://blog.gtwang.org/programming/python-threading-multithreaded-programming-tutorial/
-
     改善速度
-    fire 要分離
-    data讀取一個區塊
-    設定 每50筆一個線程
-    50>=
-    100>=
-    150>=
-    200>=
-    250>=
-    這樣就有5條線程
-    使用for + enumerate  index    
+    使用asyncio
     """
