@@ -15,7 +15,9 @@ import time
 import colorama
 from colorama import Fore
 from colorama import Style
-
+import re
+import sys
+import PyPDF2
 
 """
 分3條線程
@@ -115,6 +117,77 @@ class htmltopdf():
         # open folder
         start_directory = os.path.join(self.File_folder, self.fire_folder, date)
         self.startfile(start_directory)
+    
+    # 消防 指定搜尋單一類別
+    def Fire_call_find(self, date:str, input:str):
+        pass
+        """
+        消防設備
+        輸入值 YYYY-DD
+        """
+
+        date = date  # ex : '2022-05'
+        find = []
+        #建立資料夾
+        self.folder(os.path.join(self.File_folder,self.fire_folder))  #消防
+        self.folder(os.path.join(self.File_folder,self.fire_folder,date))  # 月
+
+        # with open("data.json", encoding="utf-8") as f: #Test usefile testdata.json
+        #     p = json.load(f) # json data
+
+        # 指定搜尋清單，例如：長青樓，正規 模糊搜尋要的清單 2/26 2023，已完成功能
+        
+        try:
+            for i in self.open_data['Fire_Equipment']:
+                if re.search(input ,i['name']):
+                    find.append(i['name'])
+                    
+                
+            # 使用清單 list 作為判斷，如果有資料 >0 就會執行統計
+            if len(find) > 0:
+                # 列出找到檔案數量
+                print(f'{self.fire_folder} 共有 {len(find)} 個PDF\n')        
+
+                    # 列出找到清單
+                print(f'將下載以下報表 \n')
+                for a in find:
+                    print(f'{Fore.RED}{Style.BRIGHT}{a}{Style.RESET_ALL} \n')
+            else:
+                print(f'{Fore.RED}{Style.BRIGHT}找不到你輸入的：{input}{Style.RESET_ALL}')
+
+        except:
+            print(f'找不到你輸入的：{input}')
+
+
+
+
+
+        # count file
+        # count_file = []
+        # for i in self.open_data['Fire_Equipment']:
+        #     count_file.append(i['name'])
+
+        # 使用清單 list 作為判斷，如果有資料 >0 就會執行爬蟲
+        if len(find) > 0:
+            try:
+                for i in self.open_data['Fire_Equipment']:
+                    if re.search(input ,i['name']):
+        
+                        print(f"下載報表： {i['name']} \n")
+
+                        name = i['name']
+                        url_api_1 = i['api_1']
+                        url_api_2 = i['api_2']
+                        print(f'{self.get_now_date()}  http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}' + f'  {Fore.RED}{Style.BRIGHT}{name}{Style.RESET_ALL}\n')
+                        url = f'http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}'
+                        pdfkit.from_url(url, os.path.join(self.File_folder, self.fire_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
+            except:
+                    print('請求失敗', url)
+
+            # open folder
+            start_directory = os.path.join(self.File_folder, self.fire_folder, date)
+            self.startfile(start_directory)
+
 
     # 電力設備
     def electricity(self, date:str):
@@ -373,10 +446,76 @@ class htmltopdf():
         """
         self.folder(os.path.join(self.File_folder))  #水電消防報表
 
+    # 取得現在日期
     def get_now_date(self):
         now = datetime.datetime.now()
         current_time = now.strftime(f"{Fore.BLUE}{Style.BRIGHT}%H:%M:%S{Style.RESET_ALL}")
         return current_time
+    
+    # 電子巡檢內建每月報表的PDF，搜尋特定標題並合併一個PDF檔案
+    def pdf_report_merge(self, target_title:str):
+        """
+        每月報表產出 搜尋特定標題並合併一個PDF
+
+        儲存在 報表合併pdf 資料夾
+        """
+        try:
+            # 要搜尋的特定標題
+            target_title = target_title  # 例如 '中正樓'
+
+            # 指定PDF文件的路徑
+            pdf_path_input = input(r'輸入pdf路徑：')
+
+
+            if pdf_path_input[-3:] == 'pdf':
+                pdf_path = pdf_path_input
+            else:
+                print('路徑輸入錯誤，檔案必須pdf')
+
+
+            # 指定儲存檔案的資料夾路徑，資料夾名稱為當前時間的年月日
+            now = datetime.datetime.now()
+            folder_name = now.strftime("%Y%m%d")
+
+            output_folder = os.path.join('報表合併pdf', folder_name)
+
+            # 如果指定的資料夾不存在，則創建資料夾
+            if not os.path.exists(output_folder):
+                os.makedirs(output_folder)
+
+            # 讀取PDF文件，並搜索特定標題
+            pdf_file = open(pdf_path, "rb")
+            pdf_reader = PyPDF2.PdfFileReader(pdf_file)
+
+            merged_pdf_writer = PyPDF2.PdfFileWriter()
+            found = False
+            print('執行中，請等待結果')
+            for page_num in range(pdf_reader.numPages):
+                page = pdf_reader.getPage(page_num)
+                page_title = page.extractText().strip().split('\n')[0]
+                if re.search(target_title, page_title, re.IGNORECASE):  # 使用re模組進行模糊搜尋，並忽略大小寫
+                    merged_pdf_writer.addPage(page)
+                    found = True
+
+            # 如果搜尋到特定標題，則將合併後的PDF文件儲存為以特定標題為檔名的PDF文件
+            if found:
+                output_file_name = target_title + ".pdf"
+                output_file_path = os.path.join(output_folder, output_file_name)
+                output_file = open(output_file_path, "wb")
+                merged_pdf_writer.write(output_file)
+                output_file.close()
+                print("已經儲存PDF文件到: " + output_file_path)
+            else:
+                print("未找到指定標題")
+                
+            pdf_file.close()
+            
+            # 開啟路徑資料夾
+            self.startfile(output_folder)
+
+        except:
+            print('路徑輸入錯誤，檔案必須pdf')
+
 
     # 以下是 call 程式 main
 
@@ -389,8 +528,12 @@ class htmltopdf():
             ====================================================================
             {Fore.GREEN}{Style.BRIGHT}選擇單一種類別輸出{Style.RESET_ALL}
             {Fore.WHITE}{Style.BRIGHT}輸入{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}F{Style.RESET_ALL} {Fore.WHITE}{Style.BRIGHT}消防{Style.RESET_ALL}
+            {Fore.WHITE}{Style.BRIGHT}輸入{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}E{Style.RESET_ALL} {Fore.WHITE}{Style.BRIGHT}消防，指定單一棟別報表下載{Style.RESET_ALL}
             {Fore.WHITE}{Style.BRIGHT}輸入{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}C{Style.RESET_ALL} {Fore.WHITE}{Style.BRIGHT}電力{Style.RESET_ALL}
             {Fore.WHITE}{Style.BRIGHT}輸入{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}D{Style.RESET_ALL} {Fore.WHITE}{Style.BRIGHT}排水{Style.RESET_ALL}
+            ====================================================================
+            {Fore.GREEN}{Style.BRIGHT}電子巡檢每月報表產出PDF，搜尋特定棟別名稱合併一個PDF{Style.RESET_ALL}
+            {Fore.WHITE}{Style.BRIGHT}輸入{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}PDF{Style.RESET_ALL} {Fore.WHITE}{Style.BRIGHT}每月報表 搜尋特定棟別名稱合併一個PDF{Style.RESET_ALL}
             ====================================================================
             {Fore.WHITE}{Style.BRIGHT}輸入{Style.RESET_ALL} {Fore.YELLOW}{Style.BRIGHT}X{Style.RESET_ALL} {Fore.WHITE}{Style.BRIGHT}取消(關閉){Style.RESET_ALL}
             {Style.RESET_ALL}
@@ -660,12 +803,73 @@ class htmltopdf():
                         print(f'{int(Time_timing)} 秒')
 
                     # break
+            elif seletct_input == 'E' or seletct_input == 'e':
+                """指定下載單一棟別報表，限定消防"""
+                
+                print(f'{Fore.WHITE}{Style.BRIGHT}目前選擇{Style.RESET_ALL} {Fore.RED}{Style.BRIGHT}指定單一類別報表，消防{Style.RESET_ALL}')
+                print(Manually_text)
+                print(text_1)
+                seletct = input(f'：')
+
+                if seletct == '0':
+                    print(f'F {self.get_date()}')
+                    input_text = input("輸入要下載單一類別的報表，例如：中正樓： ")
+                    print()
+                    # 計算run時間
+                    start_time = time.time() # START
+
+                    #code
+                    self.Fire_call_find(self.get_date(), input_text)
+                    # self.Fire_call(self.get_date())
+
+                    end_time = time.time() # END
+                        
+                    # 時間處理
+                    Time_timing = end_time - start_time
+                    if int(Time_timing) >= 60 :
+                        time_sum = int(Time_timing) / 60
+                        print(f'已下載完成，總花費時間 {int(time_sum)} 分鐘')
+                    else:
+                        print(f'{int(Time_timing)} 秒')
+
+                    # break
+                elif seletct == '1':
+
+                    Manually = self.input_str()
+                    print(f'F {Manually}')
+
+                    input_text = input("輸入要下載單一棟別的報表，例如：中正樓： ")
+                    
+                    # 計算run時間
+                    start_time = time.time() # START
+
+                    #code
+                    # self.Fire_call(Manually)
+                    
+                    self.Fire_call_find(Manually, input_text)
+
+                    end_time = time.time() # END
+                        
+                    # 時間處理
+                    Time_timing = end_time - start_time
+                    if int(Time_timing) >= 60 :
+                        time_sum = int(Time_timing) / 60
+                        print(f'已下載完成，總花費時間 {int(time_sum)} 分鐘')
+                    else:
+                        print(f'{int(Time_timing)} 秒')
+
+                    # break                
+            elif seletct_input == 'PDF' or seletct_input == 'pdf':
+                input_title = input('輸入要搜尋棟別的名稱 例如： 長青樓：')
+                self.pdf_report_merge(input_title)
+
             elif seletct_input == 'X' or seletct_input == 'x':
                 print('關閉視窗')
                 os.exit()
             else:
                 print(text)
                 print('輸入錯誤，請依說明入正確的格式')
+
                 
 
 if __name__ == '__main__':
@@ -675,12 +879,7 @@ if __name__ == '__main__':
     print(
         f'{Fore.WHITE}{Style.BRIGHT}開源程式碼：https://github.com/kobojp/vghtpe_Electronic_inspection_information_webtopdf{Style.RESET_ALL}\n'
         f'{Fore.YELLOW}{Style.BRIGHT}自動下載水電消防日周月報表轉PDF檔{Style.RESET_ALL}'
+        f'{Fore.YELLOW}{Style.BRIGHT}更新，2023.02{Style.RESET_ALL}'
     )
 
     my.seletct_input()
-
-
-    """
-    改善速度
-    使用asyncio
-    """
