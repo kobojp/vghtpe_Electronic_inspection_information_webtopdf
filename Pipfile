@@ -9,6 +9,7 @@ pyqtwebengine = "*"
 pdfkit = "*"
 pyinstaller = "*"
 colorama = "*"
+pypdf2 = "<3.0"
 
 [dev-packages]
 

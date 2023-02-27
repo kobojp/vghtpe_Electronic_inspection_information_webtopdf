@@ -11,6 +11,6 @@ dist/main/*
 dist/wkhtmltox/*
 dist/*
 build/
-.gitingore
+.gitignore
 dist/
 wkhtmltopdf.exe
