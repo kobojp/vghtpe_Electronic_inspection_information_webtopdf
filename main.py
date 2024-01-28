@@ -386,8 +386,12 @@ class htmltopdf():
         """
         取得現在年、月、日，以電腦時間為準
         """
-        get_year = datetime.datetime.now().year
-        get_month = datetime.datetime.now().month-1 #下載上個月報表，減一個月
+        if datetime.datetime.now().month == 1:
+            get_year = datetime.datetime.now().year -1
+        else:
+            get_year = datetime.datetime.now().year
+
+        get_month = datetime.datetime.now().month - 1 if datetime.datetime.now().month > 1 else 12 #下載上個月報表，減一個月
         get_day = datetime.datetime.now().day
         dt = datetime.datetime(get_year, get_month, get_day)
         # print(dt.strftime('%Y-%m-%d'))
@@ -518,6 +522,7 @@ class htmltopdf():
 
 
     # 以下是 call 程式 main
+    ## 重新設計 2024/1/28
 
     def seletct_input(self):
         
@@ -874,12 +879,15 @@ class htmltopdf():
 
 if __name__ == '__main__':
     my = htmltopdf()
+
     my.General_folder()
 
     print(
         f'{Fore.WHITE}{Style.BRIGHT}開源程式碼：https://github.com/kobojp/vghtpe_Electronic_inspection_information_webtopdf{Style.RESET_ALL}\n'
         f'{Fore.YELLOW}{Style.BRIGHT}自動下載水電消防日周月報表轉PDF檔{Style.RESET_ALL}'
-        f'{Fore.YELLOW}{Style.BRIGHT}更新，2023.02{Style.RESET_ALL}'
+        f'{Fore.YELLOW}{Style.BRIGHT}更新，2024.01{Style.RESET_ALL}'
     )
 
     my.seletct_input()
+    
+    # print(my.get_date())

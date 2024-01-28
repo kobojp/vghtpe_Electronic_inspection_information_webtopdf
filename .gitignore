@@ -13,4 +13,3 @@ dist/*
 build/
 .gitignore
 dist/
-wkhtmltopdf.exe
