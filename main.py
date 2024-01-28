@@ -294,8 +294,7 @@ class htmltopdf():
         # self.folder(os.path.join("test", date))  #建立資料夾
 
         date = date # ex : '2022-05'
-
-
+        
         # file count
         self.count_file('drain')
 
