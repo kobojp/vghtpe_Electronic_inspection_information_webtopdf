@@ -55,9 +55,18 @@ class htmltopdf():
         self.should_stop = False  # 新增停止標誌
         self.progress_callback = None  # 新增回調函數
 
+        # 修改 wkhtmltopdf 路徑設定
+        if getattr(sys, 'frozen', False):
+            # 如果是打包後的執行檔
+            application_path = sys._MEIPASS
+        else:
+            # 如果是直接執行 Python 腳本
+            application_path = os.path.dirname(os.path.abspath(__file__))
+            
+        self.path_wkhtmltopdf = os.path.join(application_path, 'wkhtmltopdf.exe')
+        self.config = pdfkit.configuration(wkhtmltopdf=self.path_wkhtmltopdf)
+
     colorama.init(autoreset=True)
-    path_wkhtmltopdf = os.path.join('wkhtmltox\\bin','wkhtmltopdf.exe')
-    config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
 
     # open all data
     # url json https://www.delftstack.com/zh-tw/howto/python/python-get-json-from-url/
@@ -632,9 +641,30 @@ class HtmlToPdfGUI(tk.Tk):
         # 控制下載狀態的變數
         self.is_downloading = False
         
-        # 建立主要框架
+        # 建立主要框架和所有 GUI 元件
         self.create_widgets()
         
+        # 建立必要的資料夾 (移到最後)
+        self.create_required_folders()
+
+    def create_required_folders(self):
+        """建立必要的資料夾"""
+        required_folders = [
+            '水電消防報表',
+            os.path.join('水電消防報表', '消防'),
+            os.path.join('水電消防報表', '電力'),
+            os.path.join('水電消防報表', '排水'),
+            '報表合併pdf'  # PDF合併功能需要的資料夾
+        ]
+        
+        for folder in required_folders:
+            if not os.path.exists(folder):
+                try:
+                    os.makedirs(folder)
+                    self.update_progress(f"已建立資料夾：{folder}\n")
+                except Exception as e:
+                    self.update_progress(f"建立資料夾 {folder} 時發生錯誤：{str(e)}\n")
+
     def create_widgets(self):
         """建立所有 GUI 元件"""
         # 建立主框架
