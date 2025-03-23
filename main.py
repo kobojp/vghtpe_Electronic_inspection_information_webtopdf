@@ -110,7 +110,7 @@ class htmltopdf():
             name = i['name']
             url_api_1 = i['api_1']
             url_api_2 = i['api_2']
-            url = f'http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}'
+            url = f'https://vghtpe-ue.httc.com.tw/Report6{url_api_1}{date}{url_api_2}'
             output_path = os.path.join(self.File_folder, self.fire_folder, date, name) + '.pdf'
             
             if self.download_report(url, output_path, name):
@@ -182,8 +182,8 @@ class htmltopdf():
                         name = i['name']
                         url_api_1 = i['api_1']
                         url_api_2 = i['api_2']
-                        print(f'{self.get_now_date()}  http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}' + f'  {Fore.RED}{Style.BRIGHT}{name}{Style.RESET_ALL}\n')
-                        url = f'http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}'
+                        print(f'{self.get_now_date()}  https://vghtpe-ue.httc.com.tw/Report6{url_api_1}{date}{url_api_2}' + f'  {Fore.RED}{Style.BRIGHT}{name}{Style.RESET_ALL}\n')
+                        url = f'https://vghtpe-ue.httc.com.tw/Report6{url_api_1}{date}{url_api_2}'
                         pdfkit.from_url(url, os.path.join(self.File_folder, self.fire_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
             except:
                     print('請求失敗', url)
@@ -217,7 +217,7 @@ class htmltopdf():
             name = i['name']
             url_api_1 = i['api_1']
             url_api_2 = i['api_2']
-            url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
+            url = f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
             output_path = os.path.join(self.File_folder, self.electricity_folder, date, name) + '.pdf'
             
             if self.download_report(url, output_path, name):
@@ -229,7 +229,7 @@ class htmltopdf():
             name = i['name']
             url_api_1 = i['api_1']
             url_api_2 = i['api_2']
-            url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
+            url = f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
             output_path = os.path.join(self.File_folder, self.electricity_folder, date, name) + '.pdf'
             
             if self.download_report(url, output_path, name):
@@ -243,9 +243,9 @@ class htmltopdf():
             url_api_2 = i['api_2']
             
             if name == '中正樓24F停機坪照明設備巡檢紀錄':
-                url = f'http://210.61.217.104/Report6{url_api_1}{date}{url_api_2}'
+                url = f'https://vghtpe-ue.httc.com.tw/Report6{url_api_1}{date}{url_api_2}'
             else:
-                url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
+                url = f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
             
             output_path = os.path.join(self.File_folder, self.electricity_folder, date, name) + '.pdf'
             
@@ -282,7 +282,7 @@ class htmltopdf():
             name = i['name']
             url_api_1 = i['api_1']
             url_api_2 = i['api_2']
-            url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
+            url = f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
             output_path = os.path.join(self.File_folder, self.drain_folder, date, name) + '.pdf'
             
             if self.download_report(url, output_path, name):
@@ -294,7 +294,7 @@ class htmltopdf():
             name = i['name']
             url_api_1 = i['api_1']
             url_api_2 = i['api_2']
-            url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
+            url = f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
             output_path = os.path.join(self.File_folder, self.drain_folder, date, name) + '.pdf'
             
             if self.download_report(url, output_path, name):
@@ -306,7 +306,7 @@ class htmltopdf():
             name = i['name']
             url_api_1 = i['api_1']
             url_api_2 = i['api_2']
-            url = f'http://210.61.217.104/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
+            url = f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
             output_path = os.path.join(self.File_folder, self.drain_folder, date, name) + '.pdf'
             
             if self.download_report(url, output_path, name):
@@ -785,7 +785,7 @@ class HtmlToPdfGUI(tk.Tk):
         ).grid(row=0, column=2, padx=5)
         
         # PDF 合併區域
-        merge_frame = ttk.LabelFrame(left_frame, text="PDF合併功能", padding="10")
+        merge_frame = ttk.LabelFrame(left_frame, text="PDF合併", padding="10")
         merge_frame.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=3)
         
         ttk.Label(
