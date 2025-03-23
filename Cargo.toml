@@ -1,0 +1,19 @@
+[package]
+name = "fire_report_system"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+eframe = { version = "0.22.0", features = ["default_fonts", "glow"] }
+egui = "0.22.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = "0.4"
+tokio = { version = "1.0", features = ["full"] }
+reqwest = { version = "0.11", features = ["json"] }
+anyhow = "1.0"
+wkhtmltopdf = "0.4"
+lopdf = "0.31"  # 替換 pdf-merger，用於 PDF 處理 
+
+[target.'cfg(windows)'.dependencies]  # Windows 特定依賴
+winapi = { version = "0.3", features = ["winuser", "libloaderapi"] } 

@@ -88,10 +88,11 @@ class htmltopdf():
             print('{}建立完成'.format(folderpath))
     
     #消防設備
-    def Fire_call(self, date:str):
+    def Fire_call(self, date:str, progress_callback=None):
         """
         消防設備
         輸入值 YYYY-DD
+        progress_callback: 進度回調函數
         """
         date = date  # ex : '2022-05'
 
@@ -115,6 +116,11 @@ class htmltopdf():
             
             if self.download_report(url, output_path, name):
                 success_count += 1
+                if progress_callback:
+                    progress_callback(True)
+            else:
+                if progress_callback:
+                    progress_callback(False)
 
         print(f'{self.fire_folder}報表下載完成，成功 {success_count}/{len(count_file)} 個檔案')
 
@@ -124,35 +130,28 @@ class htmltopdf():
     
     # 消防 指定搜尋單一類別
     def Fire_call_find(self, date:str, input:str):
-        pass
         """
         消防設備
         輸入值 YYYY-DD
         """
-
         date = date  # ex : '2022-05'
         find = []
         #建立資料夾
         self.folder(os.path.join(self.File_folder,self.fire_folder))  #消防
         self.folder(os.path.join(self.File_folder,self.fire_folder,date))  # 月
 
-        # with open("data.json", encoding="utf-8") as f: #Test usefile testdata.json
-        #     p = json.load(f) # json data
-
-        # 指定搜尋清單，例如：長青樓，正規 模糊搜尋要的清單 2/26 2023，已完成功能
-        
+        # 指定搜尋清單，例如：長青樓，正規 模糊搜尋要的清單
         try:
             for i in self.open_data['Fire_Equipment']:
                 if re.search(input ,i['name']):
                     find.append(i['name'])
                     
-                
             # 使用清單 list 作為判斷，如果有資料 >0 就會執行統計
             if len(find) > 0:
                 # 列出找到檔案數量
                 print(f'{self.fire_folder} 共有 {len(find)} 個PDF\n')        
 
-                    # 列出找到清單
+                # 列出找到清單
                 print(f'將下載以下報表 \n')
                 for a in find:
                     print(f'{Fore.RED}{Style.BRIGHT}{a}{Style.RESET_ALL} \n')
@@ -162,42 +161,36 @@ class htmltopdf():
         except:
             print(f'找不到你輸入的：{input}')
 
-
-
-
-
-        # count file
-        # count_file = []
-        # for i in self.open_data['Fire_Equipment']:
-        #     count_file.append(i['name'])
-
-        # 使用清單 list 作為判斷，如果有資料 >0 就會執行爬蟲
+        # 使用清單 list 作為判斷，如果有資料 >0 就會執行下載
+        success_count = 0
         if len(find) > 0:
             try:
                 for i in self.open_data['Fire_Equipment']:
                     if re.search(input ,i['name']):
-        
-                        print(f"下載報表： {i['name']} \n")
-
                         name = i['name']
                         url_api_1 = i['api_1']
                         url_api_2 = i['api_2']
-                        print(f'{self.get_now_date()}  https://vghtpe-ue.httc.com.tw/Report6{url_api_1}{date}{url_api_2}' + f'  {Fore.RED}{Style.BRIGHT}{name}{Style.RESET_ALL}\n')
                         url = f'https://vghtpe-ue.httc.com.tw/Report6{url_api_1}{date}{url_api_2}'
-                        pdfkit.from_url(url, os.path.join(self.File_folder, self.fire_folder, date, name) + '.pdf', options=htmltopdf.options, configuration=htmltopdf.config)
-            except:
-                    print('請求失敗', url)
+                        output_path = os.path.join(self.File_folder, self.fire_folder, date, name) + '.pdf'
+                        
+                        if self.download_report(url, output_path, name):
+                            success_count += 1
 
-            # open folder
-            start_directory = os.path.join(self.File_folder, self.fire_folder, date)
-            self.startfile(start_directory)
+                print(f'搜尋下載完成，成功 {success_count}/{len(find)} 個檔案')
 
+                # open folder
+                start_directory = os.path.join(self.File_folder, self.fire_folder, date)
+                self.startfile(start_directory)
+                    
+            except Exception as e:
+                print(f'下載過程發生錯誤: {str(e)}')
 
     # 電力設備
-    def electricity(self, date:str):
+    def electricity(self, date:str, progress_callback=None):
         """
         電力
         輸入值 YYYY-DD
+        progress_callback: 進度回調函數
         """
         #建立資料夾
         self.folder(os.path.join(self.File_folder,self.electricity_folder))  #電力
@@ -259,10 +252,11 @@ class htmltopdf():
         self.startfile(start_directory)
 
     # 給排水設備
-    def drain(self, date:str):
+    def drain(self, date:str, progress_callback=None):
         """
         給排水設備
         輸入值 YYYY-DD
+        progress_callback: 進度回調函數
         """
         #建立資料夾
         self.folder(os.path.join(self.File_folder,self.drain_folder))  #給排水
@@ -434,10 +428,9 @@ class htmltopdf():
         return now.strftime("%H:%M:%S")  # 只返回時間，不加入顏色代碼
     
     # 電子巡檢內建每月報表的PDF，搜尋特定標題並合併一個PDF檔案
-    def pdf_report_merge(self, target_title:str):
+    def pdf_report_merge(self, target_title:str, progress_callback=None, should_stop_callback=None):
         """
         每月報表產出 搜尋特定標題並合併一個PDF
-
         儲存在 報表合併pdf 資料夾
         """
         try:
@@ -445,19 +438,22 @@ class htmltopdf():
             target_title = target_title  # 例如 '中正樓'
 
             # 指定PDF文件的路徑
-            pdf_path_input = input(r'輸入pdf路徑：')
+            pdf_path = filedialog.askopenfilename(
+                title="選擇PDF檔案",
+                filetypes=[("PDF files", "*.pdf")]
+            )
 
+            if not pdf_path:  # 如果使用者取消選擇
+                return
 
-            if pdf_path_input[-3:] == 'pdf':
-                pdf_path = pdf_path_input
-            else:
-                print('路徑輸入錯誤，檔案必須pdf')
-
+            if not pdf_path.lower().endswith('.pdf'):
+                if progress_callback:
+                    progress_callback('路徑輸入錯誤，檔案必須是PDF格式\n')
+                return
 
             # 指定儲存檔案的資料夾路徑，資料夾名稱為當前時間的年月日
             now = datetime.datetime.now()
             folder_name = now.strftime("%Y%m%d")
-
             output_folder = os.path.join('報表合併pdf', folder_name)
 
             # 如果指定的資料夾不存在，則創建資料夾
@@ -465,37 +461,80 @@ class htmltopdf():
                 os.makedirs(output_folder)
 
             # 讀取PDF文件，並搜索特定標題
-            pdf_file = open(pdf_path, "rb")
-            pdf_reader = PyPDF2.PdfFileReader(pdf_file)
+            with open(pdf_path, "rb") as pdf_file:
+                try:
+                    pdf_reader = PyPDF2.PdfFileReader(pdf_file)
+                    merged_pdf_writer = PyPDF2.PdfFileWriter()
+                    found = False
+                    total_pages = pdf_reader.numPages
+                    matched_pages = []  # 先收集匹配的頁面
+                    
+                    if progress_callback:
+                        progress_callback("開始搜尋匹配頁面...\n")
+                    
+                    # 第一階段：搜尋匹配頁面
+                    for page_num in range(total_pages):
+                        # 檢查是否需要停止
+                        if should_stop_callback and should_stop_callback():
+                            if progress_callback:
+                                progress_callback("使用者取消合併\n")
+                            return
+                            
+                        page = pdf_reader.getPage(page_num)
+                        try:
+                            page_text = page.extractText().strip().split('\n')[0]
+                        except:
+                            page_text = ""
+                        
+                        # 更新進度
+                        if progress_callback:
+                            progress_callback(f"搜尋頁面 {page_num + 1}/{total_pages}\n", (page_num + 1) / total_pages * 50)  # 前50%進度
+                        
+                        if re.search(target_title, page_text, re.IGNORECASE):
+                            matched_pages.append((page_num, page_text))
+                            found = True
 
-            merged_pdf_writer = PyPDF2.PdfFileWriter()
-            found = False
-            print('執行中，請等待結果')
-            for page_num in range(pdf_reader.numPages):
-                page = pdf_reader.getPage(page_num)
-                page_title = page.extractText().strip().split('\n')[0]
-                if re.search(target_title, page_title, re.IGNORECASE):  # 使用re模組進行模糊搜尋，並忽略大小寫
-                    merged_pdf_writer.addPage(page)
-                    found = True
+                    # 第二階段：合併匹配頁面
+                    if found and not (should_stop_callback and should_stop_callback()):
+                        if progress_callback:
+                            progress_callback(f"找到 {len(matched_pages)} 個匹配頁面，開始合併...\n")
+                        
+                        for idx, (page_num, page_text) in enumerate(matched_pages):
+                            # 檢查是否需要停止
+                            if should_stop_callback and should_stop_callback():
+                                if progress_callback:
+                                    progress_callback("使用者取消合併\n")
+                                return
+                                
+                            page = pdf_reader.getPage(page_num)
+                            merged_pdf_writer.addPage(page)
+                            
+                            # 更新進度
+                            if progress_callback:
+                                progress_callback(f"合併頁面: {page_text}\n", 50 + (idx + 1) / len(matched_pages) * 50)  # 後50%進度
+                        
+                        # 儲存合併後的PDF
+                        if not (should_stop_callback and should_stop_callback()):
+                            output_file_name = target_title + ".pdf"
+                            output_file_path = os.path.join(output_folder, output_file_name)
+                            with open(output_file_path, "wb") as output_file:
+                                merged_pdf_writer.write(output_file)
+                            if progress_callback:
+                                progress_callback(f"已儲存合併後的PDF文件到: {output_file_path}\n")
+                            self.startfile(output_folder)
+                    elif not found:
+                        if progress_callback:
+                            progress_callback("未找到符合的頁面\n")
 
-            # 如果搜尋到特定標題，則將合併後的PDF文件儲存為以特定標題為檔名的PDF文件
-            if found:
-                output_file_name = target_title + ".pdf"
-                output_file_path = os.path.join(output_folder, output_file_name)
-                output_file = open(output_file_path, "wb")
-                merged_pdf_writer.write(output_file)
-                output_file.close()
-                print("已經儲存PDF文件到: " + output_file_path)
-            else:
-                print("未找到指定標題")
-                
-            pdf_file.close()
-            
-            # 開啟路徑資料夾
-            self.startfile(output_folder)
+                except Exception as e:
+                    if progress_callback:
+                        progress_callback(f"處理PDF時發生錯誤: {str(e)}\n")
+                    raise
 
-        except:
-            print('路徑輸入錯誤，檔案必須pdf')
+        except Exception as e:
+            if progress_callback:
+                progress_callback(f"發生錯誤: {str(e)}\n")
+            raise
 
     def set_progress_callback(self, callback):
         """設置進度回調函數"""
@@ -533,10 +572,18 @@ class htmltopdf():
                     'quiet': None
                 }
                 
+                # 檢查是否需要停止
+                if self.should_stop:
+                    raise Exception("使用者取消下載")
+                    
                 pdfkit.from_url(url, output_path,
                                options=options,
                                configuration=self.config)
                 
+                # 檢查是否需要停止
+                if self.should_stop:
+                    raise Exception("使用者取消下載")
+                    
                 if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
                     self.log_progress(f'{self.get_now_date()} {name} 下載完成\n')
                     return True
@@ -560,7 +607,7 @@ class htmltopdf():
         """停止所有下載"""
         self.should_stop = True
 
-    def run_all_reports(self, date):
+    def run_all_reports(self, date, progress_callback=None):
         """並行執行所有報表下載任務"""
         start_time = time.time()
         
@@ -574,17 +621,7 @@ class htmltopdf():
             self.folder(os.path.join(self.File_folder, self.electricity_folder, date))
             self.folder(os.path.join(self.File_folder, self.drain_folder, date))
         
-        # 建立執行緒並使用事件來追蹤完成狀態
-        threads = []
-        completion_events = []
-        
         # 使用中文名稱對應
-        task_names = {
-            self.electricity: '電力',
-            self.drain: '排水',
-            self.Fire_call: '消防'
-        }
-        
         tasks = [
             (self.electricity, '電力'),
             (self.drain, '排水'),
@@ -594,10 +631,10 @@ class htmltopdf():
         for task_func, task_name in tasks:
             if self.should_stop:
                 break
-                
+            
             try:
                 self.log_progress(f'開始下載{task_name}報表...\n')
-                task_func(date)
+                task_func(date, progress_callback=progress_callback)
                 self.log_progress(f'{task_name}報表下載完成\n')
             except Exception as e:
                 self.log_progress(f'{task_name}報表下載發生錯誤: {str(e)}\n')
@@ -618,7 +655,22 @@ class HtmlToPdfGUI(tk.Tk):
         super().__init__()
         
         self.title("自動下載水電消防報表系統")
-        self.geometry("800x550")
+        
+        # 新增should_stop屬性
+        self.should_stop = False
+        
+        # 獲取螢幕尺寸
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        
+        # 計算窗口位置
+        window_width = 730  # 修改視窗寬度
+        window_height = 700  # 修改視窗高度
+        x = (screen_width - window_width) // 2
+        y = (screen_height - window_height) // 2
+        
+        # 設置窗口大小和位置（只設置一次）
+        self.geometry(f"{window_width}x{window_height}+{x}+{y}")
         
         # 定義按鈕樣式
         self.button_style = {
@@ -724,7 +776,7 @@ class HtmlToPdfGUI(tk.Tk):
         ).grid(row=0, column=0, sticky=tk.W)
         
         # 建立報表名稱顯示區域和捲動條
-        self.report_list = tk.Listbox(list_frame, width=35, height=20)
+        self.report_list = tk.Listbox(list_frame, width=35, height=35)
         self.report_list.grid(row=1, column=0, sticky=(tk.W, tk.E))
         
         # 加入垂直捲動條
@@ -784,35 +836,91 @@ class HtmlToPdfGUI(tk.Tk):
             **self.button_style
         ).grid(row=0, column=2, padx=5)
         
+        # 消防搜尋區域
+        fire_search_frame = ttk.LabelFrame(left_frame, text="消防搜尋", padding="10")
+        fire_search_frame.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=3)
+
+        ttk.Label(
+            fire_search_frame, 
+            text="搜尋名稱:"
+        ).grid(row=0, column=0, padx=5)
+
+        self.fire_search_var = tk.StringVar()
+        self.fire_search_combo = ttk.Combobox(
+            fire_search_frame,
+            textvariable=self.fire_search_var,
+            values=self.pdf_handler.open_data["Building_name"],  # 使用Building_name列表作为选项
+            state="readonly",  # 设置为只读，防止用户手动输入
+            width=15
+        )
+        self.fire_search_combo.grid(row=0, column=1, padx=5)
+        self.fire_search_combo.current(0)  # 設置預設選擇第一個選項
+
+        tk.Button(
+            fire_search_frame, 
+            text="搜尋下載", 
+            command=self.search_fire_report,
+            **self.button_style
+        ).grid(row=0, column=2, padx=5)
+
         # PDF 合併區域
         merge_frame = ttk.LabelFrame(left_frame, text="PDF合併", padding="10")
-        merge_frame.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=3)
-        
+        merge_frame.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=3)
+
+        # PDF合併区域
+        pdf_merge_frame = ttk.Frame(merge_frame)
+        pdf_merge_frame.grid(row=0, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=3)
+
         ttk.Label(
-            merge_frame, 
-            text="搜尋棟別:"
+            pdf_merge_frame, 
+            text="搜尋關鍵字:"
         ).grid(row=0, column=0, padx=5)
-        
+
         self.building_var = tk.StringVar()
         ttk.Entry(
-            merge_frame, 
+            pdf_merge_frame, 
             textvariable=self.building_var
         ).grid(row=0, column=1, padx=5)
-        
+
         tk.Button(
-            merge_frame, 
+            pdf_merge_frame, 
             text="合併PDF", 
             command=self.merge_pdf,
             **self.button_style
         ).grid(row=0, column=2, padx=5)
+
+        # 新增說明文字
+        ttk.Label(
+            merge_frame,
+            text="說明：合併一個PDF後可接續繼續合併其他PDF檔案",
+            font=('微軟正黑體', 9),
+            foreground='#666666'  # 使用灰色文字
+        ).grid(row=1, column=0, columnspan=3, pady=(5, 0), sticky='w')
         
-        # 進度顯示區域
+        # 進度顯示區域 (將原本的 row=4 改為 row=5)
         progress_frame = ttk.Frame(left_frame)
-        progress_frame.grid(row=4, column=0, columnspan=2, pady=3)
+        progress_frame.grid(row=5, column=0, columnspan=2, pady=3)
         
-        # 建立文字區域和捲動條
+        # 進度條框架
+        progress_bar_frame = ttk.Frame(progress_frame)
+        progress_bar_frame.grid(row=0, column=0, columnspan=2, pady=3)
+        
+        # 進度條標籤
+        self.progress_label = ttk.Label(progress_bar_frame, text="")
+        self.progress_label.grid(row=0, column=0, columnspan=2, pady=2)
+        
+        # 進度條
+        self.progress_bar = ttk.Progressbar(
+            progress_bar_frame,
+            orient="horizontal",
+            length=300,
+            mode="determinate"
+        )
+        self.progress_bar.grid(row=1, column=0, columnspan=2, pady=2)
+        
+        # 文字顯示區域
         text_frame = ttk.Frame(progress_frame)
-        text_frame.grid(row=0, column=0, columnspan=2)
+        text_frame.grid(row=2, column=0, columnspan=2)
         
         self.progress_text = tk.Text(text_frame, height=8, width=50)
         self.progress_text.grid(row=0, column=0)
@@ -829,7 +937,7 @@ class HtmlToPdfGUI(tk.Tk):
         
         # 清除按鈕
         button_frame = ttk.Frame(progress_frame)
-        button_frame.grid(row=1, column=0, columnspan=2, pady=5)
+        button_frame.grid(row=3, column=0, columnspan=2, pady=5)
         
         tk.Button(
             button_frame,
@@ -838,9 +946,9 @@ class HtmlToPdfGUI(tk.Tk):
             **self.button_style
         ).pack(side=tk.LEFT, padx=5)
         
-        # 加入控制按鈕區域
+        # 修改控制按鈕區域
         control_frame = ttk.Frame(left_frame)
-        control_frame.grid(row=5, column=0, columnspan=2, pady=3)
+        control_frame.grid(row=6, column=0, columnspan=2, pady=3)
         
         self.start_button = tk.Button(
             control_frame,
@@ -859,6 +967,16 @@ class HtmlToPdfGUI(tk.Tk):
         )
         self.stop_button.grid(row=0, column=1, padx=5)
         
+        # 新增停止合併按鈕
+        self.stop_merge_button = tk.Button(
+            control_frame,
+            text="停止合併",
+            command=self.stop_merge,
+            state=tk.DISABLED,
+            **self.button_style
+        )
+        self.stop_merge_button.grid(row=0, column=2, padx=5)
+
     def update_report_names(self, event=None):
         """更新報表名稱列表"""
         type_map = {
@@ -882,6 +1000,10 @@ class HtmlToPdfGUI(tk.Tk):
             for name in names:
                 self.report_list.insert(tk.END, name)
         
+        # 新增點擊事件綁定
+        if selected_type == "消防":
+            self.report_list.bind('<Double-Button-1>', self.download_selected_fire_report)
+
     def update_progress(self, message):
         """更新進度顯示"""
         self.progress_text.insert(tk.END, message)
@@ -894,6 +1016,7 @@ class HtmlToPdfGUI(tk.Tk):
             return
             
         self.is_downloading = True
+        self.should_stop = False  # 重置停止標誌
         self.pdf_handler.should_stop = False
         self.start_button.config(state=tk.DISABLED)
         self.stop_button.config(state=tk.NORMAL)
@@ -910,21 +1033,68 @@ class HtmlToPdfGUI(tk.Tk):
     def _download_task(self, date):
         """執行下載任務的執行緒"""
         try:
-            self.pdf_handler.run_all_reports(date)
+            self.reset_progress_bar()
+            
+            # 計算總檔案數
+            total_files = (
+                len(self.pdf_handler.open_data['Fire_Equipment']) +
+                len(self.pdf_handler.open_data['electricity_every_day']) +
+                len(self.pdf_handler.open_data['electricity_every_week']) +
+                len(self.pdf_handler.open_data['electricity_every_month']) +
+                len(self.pdf_handler.open_data['drain_day']) +
+                len(self.pdf_handler.open_data['drain_week']) +
+                len(self.pdf_handler.open_data['drain_month'])
+            )
+            current_file = 0
+            
+            def progress_callback(success):
+                nonlocal current_file
+                if self.should_stop:  # 檢查是否需要停止
+                    raise Exception("使用者取消下載")
+                current_file += 1
+                self.update_progress_bar(current_file, total_files)
+            
+            # 修改run_all_reports方法的調用
+            tasks = [
+                (self.pdf_handler.Fire_call, '消防'),
+                (self.pdf_handler.electricity, '電力'),
+                (self.pdf_handler.drain, '排水')
+            ]
+            
+            for task_func, task_name in tasks:
+                if self.should_stop:  # 檢查是否需要停止
+                    raise Exception("使用者取消下載")
+                    
+                try:
+                    self.update_progress(f'開始下載{task_name}報表...\n')
+                    task_func(date, progress_callback=progress_callback)
+                    self.update_progress(f'{task_name}報表下載完成\n')
+                except Exception as e:
+                    if str(e) == "使用者取消下載":
+                        raise  # 重新拋出取消下載的異常
+                    self.update_progress(f'{task_name}報表下載發生錯誤: {str(e)}\n')
+                    if self.should_stop:
+                        raise Exception("使用者取消下載")
+            
             if self.is_downloading:  # 檢查是否被停止
                 self.update_progress("下載完成！\n")
+            
         except Exception as e:
-            if self.is_downloading:  # 檢查是否被停止
+            if str(e) == "使用者取消下載":
+                self.update_progress("下載已被取消\n")
+            elif self.is_downloading:  # 檢查是否被停止
                 messagebox.showerror("錯誤", f"下載過程發生錯誤：{str(e)}")
         finally:
             self.is_downloading = False
             self.start_button.config(state=tk.NORMAL)
             self.stop_button.config(state=tk.DISABLED)
-            
+            self.reset_progress_bar()
+
     def stop_download(self):
         """停止下載"""
         if self.is_downloading:
-            self.pdf_handler.stop_all_downloads()  # 設置停止標誌
+            self.should_stop = True
+            self.pdf_handler.should_stop = True
             self.update_progress("正在停止下載...\n")
             
             # 等待執行緒結束
@@ -935,20 +1105,35 @@ class HtmlToPdfGUI(tk.Tk):
             self.update_progress("下載已停止\n")
             self.start_button.config(state=tk.NORMAL)
             self.stop_button.config(state=tk.DISABLED)
-                
+            
+            # 重置停止標誌
+            self.should_stop = False
+            self.pdf_handler.should_stop = False
+
     def manual_download(self):
         """手動輸入日期下載"""
+        if self.is_downloading:
+            return
+        
         dialog = DateInputDialog(self)
         if dialog.result:
             date = dialog.result
+            
+            self.is_downloading = True
+            self.should_stop = False
+            self.pdf_handler.should_stop = False
+            self.start_button.config(state=tk.DISABLED)
+            self.stop_button.config(state=tk.NORMAL)
+            
             self.update_progress(f"開始下載 {date} 報表...\n")
             
-            try:
-                self.pdf_handler.run_all_reports(date)
-                self.update_progress("下載完成！\n")
-            except Exception as e:
-                messagebox.showerror("錯誤", f"下載過程發生錯誤：{str(e)}")
-                
+            # 使用與auto_download相同的下載任務執行緒
+            self.download_thread = threading.Thread(
+                target=self._download_task,
+                args=(date,)
+            )
+            self.download_thread.start()
+
     def download_single_type(self, type_name):
         """下載單一類別報表"""
         if self.is_downloading:
@@ -967,6 +1152,7 @@ class HtmlToPdfGUI(tk.Tk):
             display_name = type_names.get(type_name, type_name)
             
             self.is_downloading = True
+            self.should_stop = False
             self.pdf_handler.should_stop = False
             self.start_button.config(state=tk.DISABLED)
             self.stop_button.config(state=tk.NORMAL)
@@ -983,46 +1169,305 @@ class HtmlToPdfGUI(tk.Tk):
     def _download_single_task(self, type_name, date):
         """執行單一類別下載任務的執行緒"""
         try:
+            self.reset_progress_bar()
             if type_name == "fire":
-                self.pdf_handler.Fire_call(date)
+                total_files = len(self.pdf_handler.open_data['Fire_Equipment'])
+                current_file = 0
+                
+                def progress_callback(success):
+                    nonlocal current_file
+                    current_file += 1
+                    self.update_progress_bar(current_file, total_files)
+                
+                self.pdf_handler.Fire_call(date, progress_callback=progress_callback)
             elif type_name == "electricity":
-                self.pdf_handler.electricity(date)
+                # 計算電力報表總數
+                total_files = (len(self.pdf_handler.open_data['electricity_every_day']) +
+                             len(self.pdf_handler.open_data['electricity_every_week']) +
+                             len(self.pdf_handler.open_data['electricity_every_month']))
+                current_file = 0
+                
+                def progress_callback(success):
+                    nonlocal current_file
+                    current_file += 1
+                    self.update_progress_bar(current_file, total_files)
+                
+                self.pdf_handler.electricity(date, progress_callback=progress_callback)
             elif type_name == "drain":
-                self.pdf_handler.drain(date)
+                # 計算排水報表總數
+                total_files = (len(self.pdf_handler.open_data['drain_day']) +
+                             len(self.pdf_handler.open_data['drain_week']) +
+                             len(self.pdf_handler.open_data['drain_month']))
+                current_file = 0
+                
+                def progress_callback(success):
+                    nonlocal current_file
+                    current_file += 1
+                    self.update_progress_bar(current_file, total_files)
+                
+                self.pdf_handler.drain(date, progress_callback=progress_callback)
             
-            if self.is_downloading:  # 檢查是否被停止
+            if self.is_downloading:
                 self.update_progress("下載完成！\n")
         except Exception as e:
-            if self.is_downloading:  # 檢查是否被停止
+            if self.is_downloading:
                 messagebox.showerror("錯誤", f"下載過程發生錯誤：{str(e)}")
         finally:
             self.is_downloading = False
             self.start_button.config(state=tk.NORMAL)
             self.stop_button.config(state=tk.DISABLED)
+            self.reset_progress_bar()
                 
     def merge_pdf(self):
         """合併PDF功能"""
+        if hasattr(self, 'is_merging') and self.is_merging:
+            return
+        
         building = self.building_var.get()
         if not building:
-            messagebox.showwarning("警告", "請輸入要搜尋的棟別名稱")
+            messagebox.showwarning("警告", "請輸入要搜尋的關鍵字")
             return
             
-        file_path = filedialog.askopenfilename(
-            title="選擇PDF檔案",
-            filetypes=[("PDF files", "*.pdf")]
-        )
+        # 使用執行緒來執行合併
+        self.is_merging = True
+        self.should_stop = False  # 重置停止標誌
+        self.pdf_handler.should_stop = False  # 重置PDF處理器的停止標誌
+        self.stop_merge_button.config(state=tk.NORMAL)
         
-        if file_path:
+        self.merge_thread = threading.Thread(
+            target=self._merge_pdf_task,
+            args=(building,)
+        )
+        self.merge_thread.start()
+
+    def _merge_pdf_task(self, building):
+        """執行PDF合併任務的執行緒"""
+        try:
+            self.reset_progress_bar()
+            
+            def progress_callback(message, progress=None):
+                if self.should_stop:  # 檢查是否需要停止
+                    raise Exception("使用者取消合併")
+                self.update_progress(message)
+                if progress is not None:
+                    self.update_progress_bar(progress, 100)
+            
+            def should_stop_callback():
+                return self.should_stop
+            
+            # 執行合併
             try:
-                self.pdf_handler.pdf_report_merge(building)
-                self.update_progress("PDF合併完成！\n")
+                # 重置停止標誌
+                self.should_stop = False
+                self.pdf_handler.should_stop = False
+                
+                self.pdf_handler.pdf_report_merge(
+                    building,
+                    progress_callback=progress_callback,
+                    should_stop_callback=should_stop_callback
+                )
             except Exception as e:
-                messagebox.showerror("錯誤", f"PDF合併過程發生錯誤：{str(e)}")
+                if str(e) == "使用者取消合併":
+                    self.update_progress("合併已被取消\n")
+                else:
+                    raise
+            
+        except Exception as e:
+            if str(e) != "使用者取消合併":
+                self.update_progress(f"合併過程發生錯誤: {str(e)}\n")
+        finally:
+            self.is_merging = False
+            self.stop_merge_button.config(state=tk.DISABLED)
+            self.reset_progress_bar()
+            self.should_stop = False  # 重置停止標誌
+
+    def stop_merge(self):
+        """停止PDF合併"""
+        if hasattr(self, 'is_merging') and self.is_merging:
+            self.should_stop = True
+            self.pdf_handler.should_stop = True  # 同時設置PDF處理器的停止標誌
+            self.update_progress("正在停止合併...\n")
+            
+            # 等待合併執行緒結束
+            if hasattr(self, 'merge_thread') and self.merge_thread.is_alive():
+                self.merge_thread.join(timeout=5)
+                
+            self.is_merging = False
+            self.update_progress("合併已停止\n")
+            self.stop_merge_button.config(state=tk.DISABLED)
+
+    def search_fire_report(self):
+        """搜索并下载消防报表"""
+        if self.is_downloading:
+            return
+        
+        search_text = self.fire_search_var.get()
+        if not search_text:
+            messagebox.showwarning("警告", "請輸入要搜尋的消防設備名稱")
+            return
+        
+        # 取得日期
+        dialog = DateInputDialog(self)
+        if dialog.result:
+            date = dialog.result
+            
+            # 設置下載狀態
+            self.is_downloading = True
+            self.should_stop = False
+            self.pdf_handler.should_stop = False
+            self.start_button.config(state=tk.DISABLED)
+            self.stop_button.config(state=tk.NORMAL)
+            
+            # 使用執行緒來執行下載
+            self.download_thread = threading.Thread(
+                target=self._search_fire_task,
+                args=(date, search_text)
+            )
+            self.download_thread.start()
+
+    def _search_fire_task(self, date, search_text):
+        """執行消防搜尋下載任務的執行緒"""
+        try:
+            self.reset_progress_bar()  # 重置進度條
+            self.update_progress(f"開始搜尋消防設備: {search_text}\n")
+            
+            # 搜尋匹配的報表
+            find = []
+            for i in self.pdf_handler.open_data['Fire_Equipment']:
+                if self.should_stop:
+                    raise Exception("使用者取消下載")
+                if re.search(search_text, i['name']):
+                    find.append(i)
+            
+            if len(find) > 0:
+                self.update_progress(f"消防 共有 {len(find)} 個PDF\n")
+                self.update_progress("將下載以下報表:\n")
+                for item in find:
+                    self.update_progress(f"{item['name']}\n")
+                
+                # 設置進度條
+                total_files = len(find)
+                current_file = 0
+                
+                # 下載找到的報表
+                success_count = 0
+                for item in find:
+                    if self.should_stop:
+                        raise Exception("使用者取消下載")
+                        
+                    name = item['name']
+                    url = f'https://vghtpe-ue.httc.com.tw/Report6{item["api_1"]}{date}{item["api_2"]}'
+                    output_path = os.path.join(
+                        self.pdf_handler.File_folder,
+                        self.pdf_handler.fire_folder,
+                        date,
+                        f"{name}.pdf"
+                    )
+                    
+                    if self.pdf_handler.download_report(url, output_path, name):
+                        success_count += 1
+                    
+                    current_file += 1
+                    self.update_progress_bar(current_file, total_files)  # 更新進度條
+                
+                self.update_progress(f"搜尋下載完成，成功 {success_count}/{len(find)} 個檔案\n")
+                
+                # 開啟資料夾
+                if not self.should_stop:
+                    start_directory = os.path.join(
+                        self.pdf_handler.File_folder,
+                        self.pdf_handler.fire_folder,
+                        date
+                    )
+                    self.pdf_handler.startfile(start_directory)
+            else:
+                self.update_progress(f"找不到符合的報表：{search_text}\n")
+                
+        except Exception as e:
+            if str(e) == "使用者取消下載":
+                self.update_progress("下載已被取消\n")
+            else:
+                self.update_progress(f"下載過程發生錯誤: {str(e)}\n")
+        finally:
+            self.is_downloading = False
+            self.start_button.config(state=tk.NORMAL)
+            self.stop_button.config(state=tk.DISABLED)
+            self.reset_progress_bar()  # 重置進度條
+            
+            # 重置停止標誌
+            self.should_stop = False
+            self.pdf_handler.should_stop = False
+
+    def download_selected_fire_report(self, event):
+        """下載選定的消防報表"""
+        selection = self.report_list.curselection()
+        if not selection:
+            return
+        
+        selected_name = self.report_list.get(selection[0])
+        
+        # 彈出日期輸入對話框
+        dialog = DateInputDialog(self)
+        if dialog.result:
+            date = dialog.result
+            
+            # 在Fire_Equipment中尋找對應的報表資料
+            for report in self.pdf_handler.open_data['Fire_Equipment']:
+                if report['name'] == selected_name:
+                    try:
+                        # 組合URL
+                        url = f'https://vghtpe-ue.httc.com.tw/Report6{report["api_1"]}{date}{report["api_2"]}'
+                        
+                        # 建立資料夾
+                        self.pdf_handler.folder(os.path.join(self.pdf_handler.File_folder, self.pdf_handler.fire_folder))
+                        self.pdf_handler.folder(os.path.join(self.pdf_handler.File_folder, self.pdf_handler.fire_folder, date))
+                        
+                        # 設定輸出路徑
+                        output_path = os.path.join(
+                            self.pdf_handler.File_folder,
+                            self.pdf_handler.fire_folder,
+                            date,
+                            f"{selected_name}.pdf"
+                        )
+                        
+                        self.update_progress(f"開始下載 {selected_name}...\n")
+                        
+                        # 下載報表
+                        if self.pdf_handler.download_report(url, output_path, selected_name):
+                            self.update_progress(f"{selected_name} 下載完成\n")
+                            
+                            # 開啟資料夾
+                            start_directory = os.path.join(
+                                self.pdf_handler.File_folder,
+                                self.pdf_handler.fire_folder,
+                                date
+                            )
+                            self.pdf_handler.startfile(start_directory)
+                        else:
+                            self.update_progress(f"{selected_name} 下載失敗\n")
+                        
+                    except Exception as e:
+                        messagebox.showerror("錯誤", f"下載過程發生錯誤：{str(e)}")
+                    break
+
+    def update_progress_bar(self, current, total):
+        """更新進度條"""
+        progress = (current / total) * 100
+        self.progress_bar["value"] = progress
+        self.progress_label.config(text=f"下載進度: {progress:.1f}%")
+        self.update_idletasks()
+
+    def reset_progress_bar(self):
+        """重置進度條"""
+        self.progress_bar["value"] = 0
+        self.progress_label.config(text="")
+        self.update_idletasks()
 
     def clear_progress(self):
         """清除進度顯示區域的內容"""
-        self.progress_text.delete('1.0', tk.END)
-        self.update_idletasks()
+        self.progress_text.delete('1.0', tk.END)  # 清除文字區域
+        self.reset_progress_bar()  # 重置進度條
+        self.update_idletasks()  # 更新界面
 
 class DateInputDialog(tk.Toplevel):
     def __init__(self, parent):

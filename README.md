@@ -101,6 +101,12 @@ build 指令
 ```
 pyinstaller main.py --add-data "data.json;." --add-binary "wkhtmltox/bin/wkhtmltopdf.exe;wkhtmltox/bin/"
 ```
+或是
+設定檔案  build.spec，編譯後複製data.json檔案到跟EXE同資料夾
+```
+pyinstaller build.spec --clean
+```
+
 
 或是
 
@@ -110,13 +116,14 @@ binaries=[('wkhtmltox/bin/', 'wkhtmltox/bin/')],
 datas=[('data.json', '.')],
 ```
 
-## 新增文字輸入功能
-![](./media/2023-02-27-23-52-26.png)
+## 新增GUI 
+![](./media/2025-03-23_173409.jpg)
 
-## 新增消防報表下載搜尋功能
-輸入 `E` 並輸入棟別名稱可自動搜尋特定棟別報表
+## 新增PDF合併功能
+請先輸入 關鍵字 再選擇 PDF檔案
 
-## 新增 每月報表產出搜尋單一棟別名稱合併一個PDF
+**此功能特別針對 多頁PDF處理**
 
-可使用任何多頁的PDF檔案，輸入指定要搜尋的文字
-
+## 新增 報表查詢
+選擇 報表類型 > 點選報表名稱 可下載單一報表PDF
+![](./media/2025-03-23_214313.jpg)
