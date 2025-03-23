@@ -19,13 +19,13 @@
 
 ##  api資料結構
 - 以下每個API是固定不變的，只需改變年月可取得需要棟別類型的資料
-    - https://vghtpe-ue.httc.com.twReport6/16/2022-05/16/32  135戶職務官舍避難方向燈檢查(月)
-    - https://vghtpe-ue.httc.com.twReport6/138/2022-05/138/155  135戶職務官舍出口標示燈(月)檢查
-    - https://vghtpe-ue.httc.com.twReport6/272/2022-05/256/298  135戶職務官舍火警自動警報設備(月)檢查
-    - https://vghtpe-ue.httc.com.twReport6/274/2022-05/383/417  135戶職務官舍緊急廣播設備(月)檢查
-    - https://vghtpe-ue.httc.com.twReport6/86/2022-05/86/102  135戶職務官舍滅火器(月)檢查
-    - https://vghtpe-ue.httc.com.twReport6/128/2022-05/128/144  135戶職務官舍室內消防栓檢查(月)
-    - https://vghtpe-ue.httc.com.twReport6/273/2022-05/257/299  135戶職務官舍消防泵浦(月)檢查
+    - https://vghtpe-ue.httc.com.tw/Report6/16/2022-05/16/32  135戶職務官舍避難方向燈檢查(月)
+    - https://vghtpe-ue.httc.com.tw/Report6/138/2022-05/138/155  135戶職務官舍出口標示燈(月)檢查
+    - https://vghtpe-ue.httc.com.tw/Report6/272/2022-05/256/298  135戶職務官舍火警自動警報設備(月)檢查
+    - https://vghtpe-ue.httc.com.tw/Report6/274/2022-05/383/417  135戶職務官舍緊急廣播設備(月)檢查
+    - https://vghtpe-ue.httc.com.tw/Report6/86/2022-05/86/102  135戶職務官舍滅火器(月)檢查
+    - https://vghtpe-ue.httc.com.tw/Report6/128/2022-05/128/144  135戶職務官舍室內消防栓檢查(月)
+    - https://vghtpe-ue.httc.com.tw/Report6/273/2022-05/257/299  135戶職務官舍消防泵浦(月)檢查
 ### 手動建立data(資料數據)
 * 例子：**/Report6/16/2022-05/16/32**
     * name = `135戶職務官舍避難方向燈檢查(月)`，檔案名稱以name為主
