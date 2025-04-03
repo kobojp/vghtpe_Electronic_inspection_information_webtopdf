@@ -21,6 +21,7 @@ import PyPDF2
 import tkinter as tk
 from tkinter import ttk, messagebox
 from tkinter import filedialog
+from PIL import Image, ImageTk
 
 """
 分3條線程
@@ -89,45 +90,49 @@ class htmltopdf():
     
     #消防設備
     def Fire_call(self, date:str, progress_callback=None):
-        """
-        消防設備
-        輸入值 YYYY-DD
-        progress_callback: 進度回調函數
-        """
-        date = date  # ex : '2022-05'
+        """消防設備下載"""
+        try:
+            date = date  # ex : '2022-05'
 
-        #建立資料夾
-        self.folder(os.path.join(self.File_folder,self.fire_folder))  #消防
-        self.folder(os.path.join(self.File_folder,self.fire_folder,date))  # 月
+            #建立資料夾
+            self.folder(os.path.join(self.File_folder,self.fire_folder))  #消防
+            self.folder(os.path.join(self.File_folder,self.fire_folder,date))  # 月
 
-        # count file
-        count_file = []
-        for i in self.open_data['Fire_Equipment']:
-            count_file.append(i['name'])
-        print(f'{self.fire_folder} 共有 {len(count_file)} 個PDF\n')
+            # count file
+            count_file = []
+            for i in self.open_data['Fire_Equipment']:
+                count_file.append(i['name'])
+            print(f'{self.fire_folder} 共有 {len(count_file)} 個PDF\n')
 
-        success_count = 0
-        for i in self.open_data['Fire_Equipment']:
-            name = i['name']
-            url_api_1 = i['api_1']
-            url_api_2 = i['api_2']
-            url = f'https://vghtpe-ue.httc.com.tw/Report6{url_api_1}{date}{url_api_2}'
-            output_path = os.path.join(self.File_folder, self.fire_folder, date, name) + '.pdf'
-            
-            if self.download_report(url, output_path, name):
-                success_count += 1
-                if progress_callback:
-                    progress_callback(True)
-            else:
-                if progress_callback:
-                    progress_callback(False)
+            success_count = 0
+            for i in self.open_data['Fire_Equipment']:
+                if self.should_stop:
+                    raise Exception("使用者取消下載")
+                name = i['name']
+                url_api_1 = i['api_1']
+                url_api_2 = i['api_2']
+                url = f'https://vghtpe-ue.httc.com.tw/Report6{url_api_1}{date}{url_api_2}'
+                output_path = os.path.join(self.File_folder, self.fire_folder, date, name) + '.pdf'
+                
+                if self.download_report(url, output_path, name):
+                    success_count += 1
+                    if progress_callback:
+                        progress_callback(True)
+                else:
+                    if progress_callback:
+                        progress_callback(False)
 
-        print(f'{self.fire_folder}報表下載完成，成功 {success_count}/{len(count_file)} 個檔案')
+            print(f'{self.fire_folder}報表下載完成，成功 {success_count}/{len(count_file)} 個檔案')
 
-        # open folder
-        start_directory = os.path.join(self.File_folder, self.fire_folder, date)
-        self.startfile(start_directory)
-    
+            # open folder
+            start_directory = os.path.join(self.File_folder, self.fire_folder, date)
+            self.startfile(start_directory)
+        
+        except Exception as e:
+            if str(e) == "使用者取消下載":
+                raise
+            print(f'下載過程發生錯誤: {str(e)}')
+
     # 消防 指定搜尋單一類別
     def Fire_call_find(self, date:str, input:str):
         """
@@ -187,130 +192,176 @@ class htmltopdf():
 
     # 電力設備
     def electricity(self, date:str, progress_callback=None):
-        """
-        電力
-        輸入值 YYYY-DD
-        progress_callback: 進度回調函數
-        """
-        #建立資料夾
-        self.folder(os.path.join(self.File_folder,self.electricity_folder))  #電力
-        self.folder(os.path.join(self.File_folder,self.electricity_folder,date))  # 月
+        """電力設備下載"""
+        try:
+            #建立資料夾
+            self.folder(os.path.join(self.File_folder,self.electricity_folder))  #電力
+            self.folder(os.path.join(self.File_folder,self.electricity_folder,date))  # 月
 
-        date = date # ex : '2022-05'
-        
-        # file count
-        self.count_file('electricity_every')
-        
-        success_count = 0
-        total_count = 0
-
-        # day
-        for i in self.open_data['electricity_every_day']:
-            total_count += 1
-            name = i['name']
-            url_api_1 = i['api_1']
-            url_api_2 = i['api_2']
-            url = f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
-            output_path = os.path.join(self.File_folder, self.electricity_folder, date, name) + '.pdf'
+            date = date # ex : '2022-05'
             
-            if self.download_report(url, output_path, name):
-                success_count += 1
-
-        # week
-        for i in self.open_data['electricity_every_week']:
-            total_count += 1
-            name = i['name']
-            url_api_1 = i['api_1']
-            url_api_2 = i['api_2']
-            url = f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
-            output_path = os.path.join(self.File_folder, self.electricity_folder, date, name) + '.pdf'
+            # file count
+            self.count_file('electricity_every')
             
-            if self.download_report(url, output_path, name):
-                success_count += 1
+            success_count = 0
+            total_count = 0
 
-        # month
-        for i in self.open_data['electricity_every_month']:
-            total_count += 1
-            name = i['name']
-            url_api_1 = i['api_1']
-            url_api_2 = i['api_2']
-            
-            if name == '中正樓24F停機坪照明設備巡檢紀錄':
-                url = f'https://vghtpe-ue.httc.com.tw/Report6{url_api_1}{date}{url_api_2}'
-            else:
+            # day
+            for i in self.open_data['electricity_every_day']:
+                if self.should_stop:
+                    raise Exception("使用者取消下載")
+                total_count += 1
+                name = i['name']
+                url_api_1 = i['api_1']
+                url_api_2 = i['api_2']
                 url = f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
-            
-            output_path = os.path.join(self.File_folder, self.electricity_folder, date, name) + '.pdf'
-            
-            if self.download_report(url, output_path, name):
-                success_count += 1
+                output_path = os.path.join(self.File_folder, self.electricity_folder, date, name) + '.pdf'
+                
+                if self.download_report(url, output_path, name):
+                    success_count += 1
+                    if progress_callback:
+                        progress_callback(True)
+                else:
+                    if progress_callback:
+                        progress_callback(False)
 
-        print(f'{self.electricity_folder}報表下載完成，成功 {success_count}/{total_count} 個檔案')
+            # week
+            for i in self.open_data['electricity_every_week']:
+                if self.should_stop:
+                    raise Exception("使用者取消下載")
+                total_count += 1
+                name = i['name']
+                url_api_1 = i['api_1']
+                url_api_2 = i['api_2']
+                url = f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
+                output_path = os.path.join(self.File_folder, self.electricity_folder, date, name) + '.pdf'
+                
+                if self.download_report(url, output_path, name):
+                    success_count += 1
+                    if progress_callback:
+                        progress_callback(True)
+                else:
+                    if progress_callback:
+                        progress_callback(False)
 
-        # open folder
-        start_directory = os.path.join(self.File_folder,self.electricity_folder,date) 
-        self.startfile(start_directory)
+            # month
+            for i in self.open_data['electricity_every_month']:
+                if self.should_stop:
+                    raise Exception("使用者取消下載")
+                total_count += 1
+                name = i['name']
+                url_api_1 = i['api_1']
+                url_api_2 = i['api_2']
+                
+                if name == '中正樓24F停機坪照明設備巡檢紀錄':
+                    url = f'https://vghtpe-ue.httc.com.tw/Report6{url_api_1}{date}{url_api_2}'
+                else:
+                    url = f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
+                
+                output_path = os.path.join(self.File_folder, self.electricity_folder, date, name) + '.pdf'
+                
+                if self.download_report(url, output_path, name):
+                    success_count += 1
+                    if progress_callback:
+                        progress_callback(True)
+                else:
+                    if progress_callback:
+                        progress_callback(False)
+
+            print(f'{self.electricity_folder}報表下載完成，成功 {success_count}/{total_count} 個檔案')
+
+            # open folder
+            start_directory = os.path.join(self.File_folder,self.electricity_folder,date) 
+            self.startfile(start_directory)
+
+        except Exception as e:
+            if str(e) == "使用者取消下載":
+                raise
+            print(f'下載過程發生錯誤: {str(e)}')
 
     # 給排水設備
     def drain(self, date:str, progress_callback=None):
-        """
-        給排水設備
-        輸入值 YYYY-DD
-        progress_callback: 進度回調函數
-        """
-        #建立資料夾
-        self.folder(os.path.join(self.File_folder,self.drain_folder))  #給排水
-        self.folder(os.path.join(self.File_folder,self.drain_folder,date))  # 月
+        """排水設備下載"""
+        try:
+            #建立資料夾
+            self.folder(os.path.join(self.File_folder,self.drain_folder))  #給排水
+            self.folder(os.path.join(self.File_folder,self.drain_folder,date))  # 月
 
-        date = date # ex : '2022-05'
-        
-        # file count
-        self.count_file('drain')
-        
-        success_count = 0
-        total_count = 0
-
-        # day
-        for i in self.open_data['drain_day']:
-            total_count += 1
-            name = i['name']
-            url_api_1 = i['api_1']
-            url_api_2 = i['api_2']
-            url = f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
-            output_path = os.path.join(self.File_folder, self.drain_folder, date, name) + '.pdf'
+            date = date # ex : '2022-05'
             
-            if self.download_report(url, output_path, name):
-                success_count += 1
-
-        # week
-        for i in self.open_data['drain_week']:
-            total_count += 1
-            name = i['name']
-            url_api_1 = i['api_1']
-            url_api_2 = i['api_2']
-            url = f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
-            output_path = os.path.join(self.File_folder, self.drain_folder, date, name) + '.pdf'
+            # file count
+            self.count_file('drain')
             
-            if self.download_report(url, output_path, name):
-                success_count += 1
+            success_count = 0
+            total_count = 0
 
-        # month
-        for i in self.open_data['drain_month']:
-            total_count += 1
-            name = i['name']
-            url_api_1 = i['api_1']
-            url_api_2 = i['api_2']
-            url = f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
-            output_path = os.path.join(self.File_folder, self.drain_folder, date, name) + '.pdf'
-            
-            if self.download_report(url, output_path, name):
-                success_count += 1
+            # day
+            for i in self.open_data['drain_day']:
+                if self.should_stop:
+                    raise Exception("使用者取消下載")
+                total_count += 1
+                name = i['name']
+                url_api_1 = i['api_1']
+                url_api_2 = i['api_2']
+                url = f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
+                output_path = os.path.join(self.File_folder, self.drain_folder, date, name) + '.pdf'
+                
+                if self.download_report(url, output_path, name):
+                    success_count += 1
+                    if progress_callback:
+                        progress_callback(True)
+                else:
+                    if progress_callback:
+                        progress_callback(False)
 
-        print(f'{self.drain_folder}報表下載完成，成功 {success_count}/{total_count} 個檔案')
+            # week
+            for i in self.open_data['drain_week']:
+                if self.should_stop:
+                    raise Exception("使用者取消下載")
+                total_count += 1
+                name = i['name']
+                url_api_1 = i['api_1']
+                url_api_2 = i['api_2']
+                url = f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
+                output_path = os.path.join(self.File_folder, self.drain_folder, date, name) + '.pdf'
+                
+                if self.download_report(url, output_path, name):
+                    success_count += 1
+                    if progress_callback:
+                        progress_callback(True)
+                else:
+                    if progress_callback:
+                        progress_callback(False)
 
-        # open folder
-        start_directory = os.path.join(self.File_folder,self.drain_folder,date) 
-        self.startfile(start_directory)
+            # month
+            for i in self.open_data['drain_month']:
+                if self.should_stop:
+                    raise Exception("使用者取消下載")
+                total_count += 1
+                name = i['name']
+                url_api_1 = i['api_1']
+                url_api_2 = i['api_2']
+                url = f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{url_api_1}{date}-01/{date}-{self.get_monthrange(date)}{url_api_2}'
+                output_path = os.path.join(self.File_folder, self.drain_folder, date, name) + '.pdf'
+                
+                if self.download_report(url, output_path, name):
+                    success_count += 1
+                    if progress_callback:
+                        progress_callback(True)
+                else:
+                    if progress_callback:
+                        progress_callback(False)
+
+            print(f'{self.drain_folder}報表下載完成，成功 {success_count}/{total_count} 個檔案')
+
+            # open folder
+            start_directory = os.path.join(self.File_folder,self.drain_folder,date) 
+            self.startfile(start_directory)
+
+        except Exception as e:
+            if str(e) == "使用者取消下載":
+                raise
+            print(f'下載過程發生錯誤: {str(e)}')
 
 
     # Finish Open the folder
@@ -557,41 +608,63 @@ class htmltopdf():
                 self.log_progress(progress_msg)
                 self.log_progress(f'URL: {url}\n')
                 
-                options = {
-                    'no-background': None,
-                    'disable-javascript': None,
-                    'enable-local-file-access': None,
-                    'javascript-delay': 2000,
-                    'no-stop-slow-scripts': None,
-                    'load-error-handling': 'ignore',
-                    'load-media-error-handling': 'ignore',
-                    'custom-header': [
-                        ('Accept-Encoding', 'gzip')
-                    ],
-                    'encoding': 'utf-8',
-                    'quiet': None
-                }
+                # 創建 startupinfo 對象來隱藏命令列視窗
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                startupinfo.wShowWindow = subprocess.SW_HIDE
                 
-                # 檢查是否需要停止
-                if self.should_stop:
-                    raise Exception("使用者取消下載")
-                    
-                pdfkit.from_url(url, output_path,
-                               options=options,
-                               configuration=self.config)
+                # 直接使用 wkhtmltopdf 命令
+                cmd = [
+                    self.path_wkhtmltopdf,
+                    '--no-background',
+                    '--disable-javascript',
+                    '--enable-local-file-access',
+                    '--javascript-delay', '5000',
+                    '--no-stop-slow-scripts',
+                    '--load-error-handling', 'ignore',
+                    '--load-media-error-handling', 'ignore',
+                    '--encoding', 'utf-8',
+                    '--quiet',
+                    url,
+                    output_path
+                ]
                 
-                # 檢查是否需要停止
-                if self.should_stop:
-                    raise Exception("使用者取消下載")
-                    
-                if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
+                # 使用 subprocess.Popen 啟動進程，加入 startupinfo 參數
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    startupinfo=startupinfo  # 加入這個參數來隱藏命令列視窗
+                )
+                
+                # 檢查進程是否完成或是否需要停止
+                while process.poll() is None:
+                    if self.should_stop:
+                        # 終止進程
+                        process.terminate()
+                        process.wait(timeout=1)
+                        # 如果進程還在運行，強制結束
+                        if process.poll() is None:
+                            process.kill()
+                        # 刪除未完成的檔案
+                        if os.path.exists(output_path):
+                            try:
+                                os.remove(output_path)
+                            except:
+                                pass
+                        raise Exception("使用者取消下載")
+                    time.sleep(0.1)
+                
+                # 檢查下載結果
+                if process.returncode == 0 and os.path.exists(output_path) and os.path.getsize(output_path) > 0:
                     self.log_progress(f'{self.get_now_date()} {name} 下載完成\n')
                     return True
                 else:
-                    raise Exception("檔案建立失敗或大小為0")
-                
+                    stderr = process.stderr.read().decode('utf-8', errors='ignore')
+                    raise Exception(f"下載失敗: {stderr}")
+                    
             except Exception as e:
-                if self.should_stop:
+                if self.should_stop or str(e).startswith("使用者取消下載"):
                     raise Exception("使用者取消下載")
                     
                 if attempt < max_retries - 1:
@@ -655,6 +728,28 @@ class HtmlToPdfGUI(tk.Tk):
         super().__init__()
         
         self.title("自動下載水電消防報表系統")
+        
+        # 設定視窗圖示
+        try:
+            # 確定應用程式路徑
+            if getattr(sys, 'frozen', False):
+                application_path = sys._MEIPASS
+            else:
+                application_path = os.path.dirname(os.path.abspath(__file__))
+            
+            # 載入圖片
+            icon_path = os.path.join(application_path, 'vghtpe.png')
+            icon_image = Image.open(icon_path)
+            icon_photo = ImageTk.PhotoImage(icon_image)
+            
+            # 設定視窗圖示
+            self.iconphoto(True, icon_photo)
+            
+            # 保持對圖示的引用，避免被垃圾回收
+            self.icon_photo = icon_photo
+            
+        except Exception as e:
+            print(f"設定圖示時發生錯誤: {str(e)}")
         
         # 新增should_stop屬性
         self.should_stop = False
@@ -776,8 +871,11 @@ class HtmlToPdfGUI(tk.Tk):
         ).grid(row=0, column=0, sticky=tk.W)
         
         # 建立報表名稱顯示區域和捲動條
-        self.report_list = tk.Listbox(list_frame, width=35, height=35)
+        self.report_list = tk.Listbox(list_frame, width=35, height=20)
         self.report_list.grid(row=1, column=0, sticky=(tk.W, tk.E))
+        
+        # 綁定雙擊事件到下載功能
+        self.report_list.bind('<Double-Button-1>', self.download_selected_report)
         
         # 加入垂直捲動條
         list_scrollbar = ttk.Scrollbar(list_frame, orient="vertical", command=self.report_list.yview)
@@ -999,10 +1097,6 @@ class HtmlToPdfGUI(tk.Tk):
             names = [item["name"] for item in self.pdf_handler.open_data[data_key]]
             for name in names:
                 self.report_list.insert(tk.END, name)
-        
-        # 新增點擊事件綁定
-        if selected_type == "消防":
-            self.report_list.bind('<Double-Button-1>', self.download_selected_fire_report)
 
     def update_progress(self, message):
         """更新進度顯示"""
@@ -1099,16 +1193,20 @@ class HtmlToPdfGUI(tk.Tk):
             
             # 等待執行緒結束
             if hasattr(self, 'download_thread') and self.download_thread.is_alive():
-                self.download_thread.join(timeout=5)  # 最多等待5秒
-                
+                try:
+                    self.download_thread.join(timeout=3)
+                except:
+                    pass
+            
             self.is_downloading = False
             self.update_progress("下載已停止\n")
             self.start_button.config(state=tk.NORMAL)
             self.stop_button.config(state=tk.DISABLED)
             
-            # 重置停止標誌
+            # 重置所有停止標誌
             self.should_stop = False
             self.pdf_handler.should_stop = False
+            self.reset_progress_bar()
 
     def manual_download(self):
         """手動輸入日期下載"""
@@ -1170,16 +1268,34 @@ class HtmlToPdfGUI(tk.Tk):
         """執行單一類別下載任務的執行緒"""
         try:
             self.reset_progress_bar()
+            
             if type_name == "fire":
+                # 計算消防報表總數
                 total_files = len(self.pdf_handler.open_data['Fire_Equipment'])
                 current_file = 0
                 
+                # 更新進度條顯示
+                self.update_progress(f"開始下載消防報表，共 {total_files} 個檔案\n")
+                self.update_progress_bar(0, total_files)
+                
                 def progress_callback(success):
                     nonlocal current_file
+                    if self.should_stop:
+                        raise Exception("使用者取消下載")
                     current_file += 1
                     self.update_progress_bar(current_file, total_files)
+                    if success:
+                        self.update_progress(f"已完成 {current_file}/{total_files} 個檔案\n")
                 
-                self.pdf_handler.Fire_call(date, progress_callback=progress_callback)
+                try:
+                    if self.should_stop:
+                        raise Exception("使用者取消下載")
+                    self.pdf_handler.Fire_call(date, progress_callback=progress_callback)
+                except Exception as e:
+                    if str(e) == "使用者取消下載":
+                        raise
+                    self.update_progress(f"下載過程發生錯誤: {str(e)}\n")
+                
             elif type_name == "electricity":
                 # 計算電力報表總數
                 total_files = (len(self.pdf_handler.open_data['electricity_every_day']) +
@@ -1187,12 +1303,28 @@ class HtmlToPdfGUI(tk.Tk):
                              len(self.pdf_handler.open_data['electricity_every_month']))
                 current_file = 0
                 
+                # 更新進度條顯示
+                self.update_progress(f"開始下載電力報表，共 {total_files} 個檔案\n")
+                self.update_progress_bar(0, total_files)
+                
                 def progress_callback(success):
                     nonlocal current_file
+                    if self.should_stop:
+                        raise Exception("使用者取消下載")
                     current_file += 1
                     self.update_progress_bar(current_file, total_files)
+                    if success:
+                        self.update_progress(f"已完成 {current_file}/{total_files} 個檔案\n")
                 
-                self.pdf_handler.electricity(date, progress_callback=progress_callback)
+                try:
+                    if self.should_stop:
+                        raise Exception("使用者取消下載")
+                    self.pdf_handler.electricity(date, progress_callback=progress_callback)
+                except Exception as e:
+                    if str(e) == "使用者取消下載":
+                        raise
+                    self.update_progress(f"下載過程發生錯誤: {str(e)}\n")
+                
             elif type_name == "drain":
                 # 計算排水報表總數
                 total_files = (len(self.pdf_handler.open_data['drain_day']) +
@@ -1200,22 +1332,42 @@ class HtmlToPdfGUI(tk.Tk):
                              len(self.pdf_handler.open_data['drain_month']))
                 current_file = 0
                 
+                # 更新進度條顯示
+                self.update_progress(f"開始下載排水報表，共 {total_files} 個檔案\n")
+                self.update_progress_bar(0, total_files)
+                
                 def progress_callback(success):
                     nonlocal current_file
+                    if self.should_stop:
+                        raise Exception("使用者取消下載")
                     current_file += 1
                     self.update_progress_bar(current_file, total_files)
+                    if success:
+                        self.update_progress(f"已完成 {current_file}/{total_files} 個檔案\n")
                 
-                self.pdf_handler.drain(date, progress_callback=progress_callback)
+                try:
+                    if self.should_stop:
+                        raise Exception("使用者取消下載")
+                    self.pdf_handler.drain(date, progress_callback=progress_callback)
+                except Exception as e:
+                    if str(e) == "使用者取消下載":
+                        raise
+                    self.update_progress(f"下載過程發生錯誤: {str(e)}\n")
             
-            if self.is_downloading:
+            if not self.should_stop:
                 self.update_progress("下載完成！\n")
+            
         except Exception as e:
-            if self.is_downloading:
+            if str(e) == "使用者取消下載":
+                self.update_progress("下載已被取消\n")
+            else:
                 messagebox.showerror("錯誤", f"下載過程發生錯誤：{str(e)}")
         finally:
             self.is_downloading = False
             self.start_button.config(state=tk.NORMAL)
             self.stop_button.config(state=tk.DISABLED)
+            self.should_stop = False
+            self.pdf_handler.should_stop = False
             self.reset_progress_bar()
                 
     def merge_pdf(self):
@@ -1345,9 +1497,12 @@ class HtmlToPdfGUI(tk.Tk):
                 for item in find:
                     self.update_progress(f"{item['name']}\n")
                 
-                # 設置進度條
-                total_files = len(find)
+                # 初始化 current_file
                 current_file = 0
+                
+                # 在下載之前建立資料夾
+                self.pdf_handler.folder(os.path.join(self.pdf_handler.File_folder, self.pdf_handler.fire_folder))
+                self.pdf_handler.folder(os.path.join(self.pdf_handler.File_folder, self.pdf_handler.fire_folder, date))
                 
                 # 下載找到的報表
                 success_count = 0
@@ -1368,7 +1523,7 @@ class HtmlToPdfGUI(tk.Tk):
                         success_count += 1
                     
                     current_file += 1
-                    self.update_progress_bar(current_file, total_files)  # 更新進度條
+                    self.update_progress_bar(current_file, len(find))  # 更新進度條
                 
                 self.update_progress(f"搜尋下載完成，成功 {success_count}/{len(find)} 個檔案\n")
                 
@@ -1398,57 +1553,130 @@ class HtmlToPdfGUI(tk.Tk):
             self.should_stop = False
             self.pdf_handler.should_stop = False
 
-    def download_selected_fire_report(self, event):
-        """下載選定的消防報表"""
+    def download_selected_report(self, event):
+        """下載選定的報表"""
         selection = self.report_list.curselection()
         if not selection:
             return
         
         selected_name = self.report_list.get(selection[0])
+        selected_type = self.report_type_var.get()
         
-        # 彈出日期輸入對話框
+        # 獲取日期
         dialog = DateInputDialog(self)
         if dialog.result:
             date = dialog.result
             
-            # 在Fire_Equipment中尋找對應的報表資料
-            for report in self.pdf_handler.open_data['Fire_Equipment']:
-                if report['name'] == selected_name:
-                    try:
-                        # 組合URL
-                        url = f'https://vghtpe-ue.httc.com.tw/Report6{report["api_1"]}{date}{report["api_2"]}'
-                        
-                        # 建立資料夾
-                        self.pdf_handler.folder(os.path.join(self.pdf_handler.File_folder, self.pdf_handler.fire_folder))
-                        self.pdf_handler.folder(os.path.join(self.pdf_handler.File_folder, self.pdf_handler.fire_folder, date))
-                        
-                        # 設定輸出路徑
-                        output_path = os.path.join(
-                            self.pdf_handler.File_folder,
-                            self.pdf_handler.fire_folder,
-                            date,
-                            f"{selected_name}.pdf"
-                        )
-                        
-                        self.update_progress(f"開始下載 {selected_name}...\n")
-                        
-                        # 下載報表
-                        if self.pdf_handler.download_report(url, output_path, selected_name):
-                            self.update_progress(f"{selected_name} 下載完成\n")
+            # 使用執行緒來執行下載
+            self.download_thread = threading.Thread(
+                target=self._download_selected_report_task,
+                args=(selected_name, selected_type, date)
+            )
+            
+            # 設置下載狀態
+            self.is_downloading = True
+            self.should_stop = False
+            self.pdf_handler.should_stop = False
+            self.start_button.config(state=tk.DISABLED)
+            self.stop_button.config(state=tk.NORMAL)
+            
+            self.download_thread.start()
+
+    def _download_selected_report_task(self, selected_name, selected_type, date):
+        """執行選定報表下載任務的執行緒"""
+        try:
+            # 在open_data中尋找對應的報表資料
+            type_map = {
+                "消防": "Fire_Equipment",
+                "電力每日": "electricity_every_day",
+                "電力每月": "electricity_every_month",
+                "電力每周": "electricity_every_week",
+                "排水每日": "drain_day",
+                "排水每月": "drain_month",
+                "排水每周": "drain_week"
+            }
+            
+            data_key = type_map.get(selected_type)
+            
+            if data_key and data_key in self.pdf_handler.open_data:
+                for report in self.pdf_handler.open_data[data_key]:
+                    if report['name'] == selected_name:
+                        try:
+                            # 檢查是否需要停止
+                            if self.should_stop:
+                                raise Exception("使用者取消下載")
+                                
+                            # 重置進度條
+                            self.reset_progress_bar()
                             
-                            # 開啟資料夾
-                            start_directory = os.path.join(
+                            # 確定輸出資料夾路徑
+                            output_folder = os.path.join(
                                 self.pdf_handler.File_folder,
-                                self.pdf_handler.fire_folder,
+                                self.pdf_handler.fire_folder if selected_type == "消防" 
+                                else self.pdf_handler.electricity_folder if "電力" in selected_type 
+                                else self.pdf_handler.drain_folder,
                                 date
                             )
-                            self.pdf_handler.startfile(start_directory)
-                        else:
-                            self.update_progress(f"{selected_name} 下載失敗\n")
-                        
-                    except Exception as e:
-                        messagebox.showerror("錯誤", f"下載過程發生錯誤：{str(e)}")
-                    break
+                            
+                            # 在下載之前建立資料夾
+                            self.pdf_handler.folder(os.path.join(self.pdf_handler.File_folder, 
+                                self.pdf_handler.fire_folder if selected_type == "消防" 
+                                else self.pdf_handler.electricity_folder if "電力" in selected_type 
+                                else self.pdf_handler.drain_folder))
+                            self.pdf_handler.folder(output_folder)
+                            
+                            # 更新進度條（開始下載）
+                            self.update_progress_bar(0, 100)
+                            self.update_progress(f"開始下載 {selected_name}...\n")
+                            
+                            # 檢查是否需要停止
+                            if self.should_stop:
+                                raise Exception("使用者取消下載")
+                            
+                            # 組合URL
+                            if "BatchAll" in report["api_1"]:
+                                url = f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{report["api_1"]}{date}-01/{date}-{self.pdf_handler.get_monthrange(date)}{report["api_2"]}'
+                            else:
+                                url = f'https://vghtpe-ue.httc.com.tw/Report6{report["api_1"]}{date}{report["api_2"]}'
+                            
+                            output_path = os.path.join(output_folder, f"{selected_name}.pdf")
+                            
+                            # 更新進度條（下載中）
+                            self.update_progress_bar(50, 100)
+                            
+                            # 檢查是否需要停止
+                            if self.should_stop:
+                                raise Exception("使用者取消下載")
+                            
+                            # 下載報表
+                            if self.pdf_handler.download_report(url, output_path, selected_name):
+                                # 檢查是否需要停止
+                                if self.should_stop:
+                                    raise Exception("使用者取消下載")
+                                    
+                                # 更新進度條（下載完成）
+                                self.update_progress_bar(100, 100)
+                                self.update_progress(f"{selected_name} 下載完成\n")
+                                
+                                # 開啟資料夾
+                                self.pdf_handler.startfile(output_folder)
+                            else:
+                                self.update_progress(f"{selected_name} 下載失敗\n")
+                            
+                        except Exception as e:
+                            if str(e) == "使用者取消下載":
+                                self.update_progress("下載已被取消\n")
+                            else:
+                                messagebox.showerror("錯誤", f"下載過程發生錯誤：{str(e)}")
+                        break
+                    
+        finally:
+            # 重置下載狀態
+            self.is_downloading = False
+            self.start_button.config(state=tk.NORMAL)
+            self.stop_button.config(state=tk.DISABLED)
+            self.should_stop = False
+            self.pdf_handler.should_stop = False
 
     def update_progress_bar(self, current, total):
         """更新進度條"""
