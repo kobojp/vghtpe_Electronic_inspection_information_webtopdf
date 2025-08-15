@@ -101,10 +101,14 @@ options = {
 
 build 指令
 
+不推薦該指令編譯
+
 ```
 pyinstaller main.py --add-data "data.json;." --add-binary "wkhtmltox/bin/wkhtmltopdf.exe;wkhtmltox/bin/"
 ```
 或是
+
+目前推薦請使用這個編譯
 設定檔案  build.spec，編譯後複製data.json檔案到跟EXE同資料夾
 ```
 pyinstaller build.spec --clean

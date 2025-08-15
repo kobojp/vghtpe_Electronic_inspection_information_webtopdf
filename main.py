@@ -599,6 +599,11 @@ class htmltopdf():
 
     def download_report(self, url, output_path, name, max_retries=3):
         """下載並儲存報表，包含重試機制"""
+        # 檢查檔案是否已存在且大小大於0
+        if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
+            self.log_progress(f'{self.get_now_date()} {name} 已存在，跳過下載\n')
+            return True
+            
         for attempt in range(max_retries):
             if self.should_stop:
                 raise Exception("使用者取消下載")
