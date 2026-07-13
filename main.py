@@ -719,7 +719,12 @@ class htmltopdf():
         """記錄進度"""
         if self.progress_callback:
             self.progress_callback(message)
-        print(message)  # 同時保留控制台輸出
+        try:
+            print(message)  # 同時保留控制台輸出
+        except UnicodeEncodeError:
+            encoding = getattr(sys.stdout, "encoding", None) or "ascii"
+            safe_message = message.encode(encoding, errors="replace").decode(encoding)
+            print(safe_message)
 
     def download_report(self, url, output_path, name, max_retries=3):
         """下載並儲存報表，包含重試機制"""
