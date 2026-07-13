@@ -39,6 +39,15 @@ DEFAULT_SETTINGS = {
 }
 
 
+def get_data_file_path():
+    """取得原始碼或已打包 EXE 同層的 data.json。"""
+    if getattr(sys, "frozen", False):
+        application_path = os.path.dirname(sys.executable)
+    else:
+        application_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(application_path, "data.json")
+
+
 def validate_month(value):
     """驗證 YYYY-MM 格式，且年份不得早於 2022。"""
     try:
@@ -190,7 +199,7 @@ class htmltopdf():
     # open all data
     # url json https://www.delftstack.com/zh-tw/howto/python/python-get-json-from-url/
     
-    data_file = 'data.json' # #Test usefile testdata.json
+    data_file = get_data_file_path()
 
     with open(data_file , encoding="utf-8") as f:
         open_data = json.load(f) # json data

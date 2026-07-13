@@ -1,12 +1,14 @@
 import json
 import io
 import os
+import sys
 import tempfile
 import unittest
 from unittest import mock
 
 from main import (
     build_report_url,
+    get_data_file_path,
     get_month_range,
     get_smooth_progress_value,
     htmltopdf,
@@ -14,6 +16,15 @@ from main import (
     save_settings,
     validate_month,
 )
+
+
+class DataFilePathTests(unittest.TestCase):
+    def test_packaged_app_uses_data_json_next_to_executable(self):
+        with (
+            mock.patch.object(sys, "frozen", True, create=True),
+            mock.patch.object(sys, "executable", r"C:\Apps\default.exe"),
+        ):
+            self.assertEqual(r"C:\Apps\data.json", get_data_file_path())
 
 
 class MonthRangeTests(unittest.TestCase):

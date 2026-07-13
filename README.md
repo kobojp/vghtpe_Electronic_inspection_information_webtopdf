@@ -129,7 +129,7 @@ pyinstaller main.py --add-data "data.json;." --add-binary "wkhtmltox/bin/wkhtmlt
 或是
 
 目前推薦請使用這個編譯
-設定檔案 `build.spec`，所需的 `data.json` 與 wkhtmltopdf 已由設定檔一併打包：
+設定檔案 `build.spec`，所需資源會由設定檔一併處理：
 
 ```powershell
 pipenv run pyinstaller build.spec --clean --noconfirm
@@ -169,7 +169,15 @@ pipenv run python -m unittest discover -s tests -v
 
 ## GitHub Actions 自動發布 Release
 
-專案的 `.github/workflows/release.yml` 會監聽 `v*` 版本標籤。標籤推送到 GitHub 後，Actions 會自動執行測試、編譯 Windows EXE，並建立 GitHub Release 及上傳安裝檔。
+專案的 `.github/workflows/release.yml` 會監聽 `v*` 版本標籤。標籤推送到 GitHub 後，Actions 會自動執行測試、編譯 Windows EXE，並建立包含下列檔案的 ZIP：
+
+```text
+水電消防報表下載系統-v5.0.4.zip
+├─ 水電消防報表下載系統.exe
+└─ data.json
+```
+
+下載後請先完整解壓縮，並保持 EXE 與 `data.json` 位於同一資料夾。程式會固定讀取 EXE 同層的 `data.json`。
 
 日常改版請先把程式碼合併到 `main`，確認測試通過，再建立一個尚未使用過的新版本號：
 
@@ -180,6 +188,6 @@ git tag $version origin/main
 git push origin $version
 ```
 
-接著到 [GitHub Actions](https://github.com/kobojp/vghtpe_Electronic_inspection_information_webtopdf/actions) 查看執行狀態，完成後可在 [Releases](https://github.com/kobojp/vghtpe_Electronic_inspection_information_webtopdf/releases) 下載 EXE。自動流程正常時，不需要再手動建立 Release。
+接著到 [GitHub Actions](https://github.com/kobojp/vghtpe_Electronic_inspection_information_webtopdf/actions) 查看執行狀態，完成後可在 [Releases](https://github.com/kobojp/vghtpe_Electronic_inspection_information_webtopdf/releases) 下載 ZIP。自動流程正常時，不需要再手動建立 Release。
 
 完整但精簡的固定發布步驟、版本號規則與常見問題，請開啟 [未來固定發布流程操作手冊](./docs/release-guide.html)。

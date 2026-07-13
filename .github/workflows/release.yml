@@ -37,7 +37,7 @@ jobs:
         shell: pwsh
         run: pipenv run pyinstaller build.spec --clean --noconfirm
 
-      - name: Verify executable
+      - name: Package release archive
         shell: pwsh
         run: |
           $exe = "dist\水電消防報表下載系統.exe"
@@ -45,14 +45,37 @@ jobs:
             throw "Build output not found: $exe"
           }
 
+          $packageName = "水電消防報表下載系統-${{ github.ref_name }}"
+          $packageDirectory = "dist\$packageName"
+          $archive = "dist\$packageName.zip"
+          New-Item -ItemType Directory -Path $packageDirectory -Force | Out-Null
+          Copy-Item -LiteralPath $exe -Destination $packageDirectory
+          Copy-Item -LiteralPath "data.json" -Destination $packageDirectory
+          Compress-Archive -Path "$packageDirectory\*" -DestinationPath $archive -Force
+
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zip = [System.IO.Compression.ZipFile]::OpenRead($archive)
+          try {
+            $entries = $zip.Entries.Name
+            if ($entries -notcontains "水電消防報表下載系統.exe") {
+              throw "Executable is missing from release archive"
+            }
+            if ($entries -notcontains "data.json") {
+              throw "data.json is missing from release archive"
+            }
+          }
+          finally {
+            $zip.Dispose()
+          }
+
       - name: Create GitHub Release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          $archive = "dist\水電消防報表下載系統-${{ github.ref_name }}.zip"
           gh release create "${{ github.ref_name }}" `
-            "dist\水電消防報表下載系統.exe" `
+            $archive `
             --verify-tag `
             --generate-notes `
             --title "水電消防報表下載系統 ${{ github.ref_name }}"
-
