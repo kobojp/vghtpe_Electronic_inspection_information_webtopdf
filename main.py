@@ -23,6 +23,123 @@ from tkinter import ttk, messagebox
 from tkinter import filedialog
 from PIL import Image, ImageTk
 
+
+REPORT_TYPE_MAP = {
+    "消防": "Fire_Equipment",
+    "電力每日": "electricity_every_day",
+    "電力每月": "electricity_every_month",
+    "電力每周": "electricity_every_week",
+    "排水每日": "drain_day",
+    "排水每月": "drain_month",
+    "排水每周": "drain_week"
+}
+
+DEFAULT_SETTINGS = {
+    "open_folder_after_completion": False
+}
+
+
+def validate_month(value):
+    """驗證 YYYY-MM 格式，且年份不得早於 2022。"""
+    try:
+        parsed = datetime.datetime.strptime(value, "%Y-%m")
+        return parsed.strftime("%Y-%m") == value and parsed.year >= 2022
+    except (TypeError, ValueError):
+        return False
+
+
+def get_month_range(start_month, end_month):
+    """取得包含起訖月份的 YYYY-MM 清單。"""
+    if not validate_month(start_month) or not validate_month(end_month):
+        raise ValueError("請輸入正確的日期格式 (YYYY-MM)，年份不得早於 2022")
+
+    start = datetime.datetime.strptime(start_month, "%Y-%m")
+    end = datetime.datetime.strptime(end_month, "%Y-%m")
+    if start > end:
+        raise ValueError("開始月份不得晚於結束月份")
+
+    months = []
+    current = start
+    while current <= end:
+        months.append(current.strftime("%Y-%m"))
+        if current.month == 12:
+            current = current.replace(year=current.year + 1, month=1)
+        else:
+            current = current.replace(month=current.month + 1)
+    return months
+
+
+def get_last_month():
+    """取得上個月的 YYYY-MM。"""
+    first_day_this_month = datetime.datetime.now().replace(day=1)
+    return (first_day_this_month - datetime.timedelta(days=1)).strftime("%Y-%m")
+
+
+def get_smooth_progress_value(current, target):
+    """讓顯示進度平滑追趕目標值，避免一次跳動過大。"""
+    current = max(0.0, min(100.0, float(current)))
+    target = max(0.0, min(100.0, float(target)))
+    difference = target - current
+    if abs(difference) < 0.1:
+        return target
+
+    step = min(max(abs(difference) * 0.12, 0.35), 2.5)
+    if difference > 0:
+        return min(current + step, target)
+    return max(current - step, target)
+
+
+def build_report_url(report, report_type, month):
+    """依報表類型建立單月份下載 URL。"""
+    if not validate_month(month):
+        raise ValueError("無效的報表月份")
+
+    if report_type == "消防":
+        return f'https://vghtpe-ue.httc.com.tw/Report6{report["api_1"]}{month}{report["api_2"]}'
+
+    if report_type.startswith("電力") or report_type.startswith("排水"):
+        year, month_number = (int(part) for part in month.split('-'))
+        last_day = calendar.monthrange(year, month_number)[1]
+        return (
+            f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{report["api_1"]}'
+            f'{month}-01/{month}-{last_day}{report["api_2"]}'
+        )
+
+    raise ValueError("未知的報表類型")
+
+
+def get_settings_path():
+    """取得使用者設定檔路徑。"""
+    appdata = os.environ.get("APPDATA") or os.path.expanduser("~")
+    return os.path.join(appdata, "VghtpeReportDownloader", "settings.json")
+
+
+def load_settings(settings_path=None):
+    """讀取設定；檔案不存在或損壞時使用安全預設值。"""
+    settings = DEFAULT_SETTINGS.copy()
+    path = settings_path or get_settings_path()
+    try:
+        with open(path, encoding="utf-8") as settings_file:
+            loaded = json.load(settings_file)
+        if isinstance(loaded.get("open_folder_after_completion"), bool):
+            settings["open_folder_after_completion"] = loaded["open_folder_after_completion"]
+    except (OSError, ValueError, AttributeError):
+        pass
+    return settings
+
+
+def save_settings(open_folder_after_completion, settings_path=None):
+    """儲存使用者設定。"""
+    path = settings_path or get_settings_path()
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as settings_file:
+        json.dump(
+            {"open_folder_after_completion": bool(open_folder_after_completion)},
+            settings_file,
+            ensure_ascii=False,
+            indent=2
+        )
+
 """
 分3條線程
     消防
@@ -48,13 +165,14 @@ wkhtmltopdf doc
 
 
 class htmltopdf():
-    def __init__(self, File_folder='水電消防報表',  fire='消防', electricity_folder='電力', drain='排水'):
+    def __init__(self, File_folder='水電消防報表', fire='消防', electricity_folder='電力', drain='排水', open_folder_after_completion=False):
         self.File_folder = File_folder
         self.fire_folder = fire
         self.electricity_folder = electricity_folder
         self.drain_folder = drain
         self.should_stop = False  # 新增停止標誌
         self.progress_callback = None  # 新增回調函數
+        self.open_folder_after_completion = open_folder_after_completion
 
         # 修改 wkhtmltopdf 路徑設定
         if getattr(sys, 'frozen', False):
@@ -366,6 +484,12 @@ class htmltopdf():
 
     # Finish Open the folder
     def startfile(sele, filename):
+        if not sele.open_folder_after_completion:
+            return
+        sele.open_folder(filename)
+
+    def open_folder(sele, filename):
+        """明確開啟指定資料夾，不受自動開啟設定影響。"""
         try:
             os.startfile(filename)
         except:
@@ -764,13 +888,14 @@ class HtmlToPdfGUI(tk.Tk):
         screen_height = self.winfo_screenheight()
         
         # 計算窗口位置
-        window_width = 730  # 修改視窗寬度
-        window_height = 700  # 修改視窗高度
+        window_width = 960
+        window_height = 820
         x = (screen_width - window_width) // 2
         y = (screen_height - window_height) // 2
         
         # 設置窗口大小和位置（只設置一次）
         self.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        self.minsize(900, 800)
         
         # 定義按鈕樣式
         self.button_style = {
@@ -786,8 +911,15 @@ class HtmlToPdfGUI(tk.Tk):
             'disabledforeground': 'black'   # 停用時的文字顏色改為黑色
         }
         
+        self.settings = load_settings()
+        self.open_folder_var = tk.BooleanVar(
+            value=self.settings["open_folder_after_completion"]
+        )
+
         # 建立 htmltopdf 實例
-        self.pdf_handler = htmltopdf()
+        self.pdf_handler = htmltopdf(
+            open_folder_after_completion=self.open_folder_var.get()
+        )
         self.pdf_handler.set_progress_callback(self.update_progress)
         
         # 控制下載狀態的變數
@@ -876,16 +1008,45 @@ class HtmlToPdfGUI(tk.Tk):
         ).grid(row=0, column=0, sticky=tk.W)
         
         # 建立報表名稱顯示區域和捲動條
-        self.report_list = tk.Listbox(list_frame, width=35, height=20)
+        self.report_list = tk.Listbox(list_frame, width=48, height=16)
         self.report_list.grid(row=1, column=0, sticky=(tk.W, tk.E))
-        
-        # 綁定雙擊事件到下載功能
-        self.report_list.bind('<Double-Button-1>', self.download_selected_report)
         
         # 加入垂直捲動條
         list_scrollbar = ttk.Scrollbar(list_frame, orient="vertical", command=self.report_list.yview)
         list_scrollbar.grid(row=1, column=1, sticky="ns")
         self.report_list.configure(yscrollcommand=list_scrollbar.set)
+
+        # 月份區間篩選
+        range_frame = ttk.Frame(report_frame)
+        range_frame.grid(row=2, column=0, padx=5, pady=(5, 0), sticky=(tk.W, tk.E))
+
+        last_month = get_last_month()
+        self.report_start_month_var = tk.StringVar(value=last_month)
+        self.report_end_month_var = tk.StringVar(value=last_month)
+
+        ttk.Label(range_frame, text="開始月份:").grid(row=0, column=0, padx=3, pady=3)
+        ttk.Entry(
+            range_frame,
+            textvariable=self.report_start_month_var,
+            width=10
+        ).grid(row=0, column=1, padx=3, pady=3)
+
+        ttk.Label(range_frame, text="結束月份:").grid(row=1, column=0, padx=3, pady=3)
+        ttk.Entry(
+            range_frame,
+            textvariable=self.report_end_month_var,
+            width=10
+        ).grid(row=1, column=1, padx=3, pady=3)
+
+        tk.Button(
+            range_frame,
+            text="下載選取報表",
+            command=self.download_selected_report,
+            **self.button_style
+        ).grid(row=2, column=0, columnspan=2, pady=(5, 0))
+
+        self.report_type_combo.current(0)
+        self.update_report_names()
         
         # === 左側元件 ===
         # 標題標籤
@@ -1020,6 +1181,9 @@ class HtmlToPdfGUI(tk.Tk):
             mode="determinate"
         )
         self.progress_bar.grid(row=1, column=0, columnspan=2, pady=2)
+        self.progress_value = 0.0
+        self.progress_target = 0.0
+        self.after(30, self._animate_progress_bar)
         
         # 文字顯示區域
         text_frame = ttk.Frame(progress_frame)
@@ -1080,20 +1244,24 @@ class HtmlToPdfGUI(tk.Tk):
         )
         self.stop_merge_button.grid(row=0, column=2, padx=5)
 
+        ttk.Checkbutton(
+            control_frame,
+            text="完成後開啟資料夾",
+            variable=self.open_folder_var,
+            command=self.update_open_folder_setting
+        ).grid(row=1, column=0, columnspan=3, pady=(8, 0))
+
+        tk.Button(
+            control_frame,
+            text="開啟下載資料夾",
+            command=self.open_download_folder,
+            **self.button_style
+        ).grid(row=2, column=0, columnspan=3, pady=(8, 0))
+
     def update_report_names(self, event=None):
         """更新報表名稱列表"""
-        type_map = {
-            "消防": "Fire_Equipment",
-            "電力每日": "electricity_every_day",
-            "電力每月": "electricity_every_month",
-            "電力每周": "electricity_every_week",
-            "排水每日": "drain_day",
-            "排水每月": "drain_month",
-            "排水每周": "drain_week"
-        }
-        
         selected_type = self.report_type_var.get()
-        data_key = type_map.get(selected_type)
+        data_key = REPORT_TYPE_MAP.get(selected_type)
         
         # 清空列表
         self.report_list.delete(0, tk.END)
@@ -1102,6 +1270,23 @@ class HtmlToPdfGUI(tk.Tk):
             names = [item["name"] for item in self.pdf_handler.open_data[data_key]]
             for name in names:
                 self.report_list.insert(tk.END, name)
+
+    def update_open_folder_setting(self):
+        """套用並保存完成後開啟資料夾的偏好。"""
+        enabled = self.open_folder_var.get()
+        self.pdf_handler.open_folder_after_completion = enabled
+        try:
+            save_settings(enabled)
+        except OSError as e:
+            messagebox.showwarning("警告", f"無法儲存設定：{str(e)}")
+
+    def open_download_folder(self):
+        """開啟水電消防報表下載根目錄。"""
+        try:
+            os.makedirs(self.pdf_handler.File_folder, exist_ok=True)
+            self.pdf_handler.open_folder(self.pdf_handler.File_folder)
+        except OSError as e:
+            messagebox.showerror("錯誤", f"無法開啟下載資料夾：{str(e)}")
 
     def update_progress(self, message):
         """更新進度顯示"""
@@ -1558,125 +1743,93 @@ class HtmlToPdfGUI(tk.Tk):
             self.should_stop = False
             self.pdf_handler.should_stop = False
 
-    def download_selected_report(self, event):
-        """下載選定的報表"""
+    def download_selected_report(self):
+        """下載選定報表的月份區間。"""
+        if self.is_downloading:
+            return
+
         selection = self.report_list.curselection()
         if not selection:
+            messagebox.showwarning("警告", "請先選擇要下載的報表")
             return
         
         selected_name = self.report_list.get(selection[0])
         selected_type = self.report_type_var.get()
-        
-        # 獲取日期
-        dialog = DateInputDialog(self)
-        if dialog.result:
-            date = dialog.result
-            
-            # 使用執行緒來執行下載
-            self.download_thread = threading.Thread(
-                target=self._download_selected_report_task,
-                args=(selected_name, selected_type, date)
-            )
-            
-            # 設置下載狀態
-            self.is_downloading = True
-            self.should_stop = False
-            self.pdf_handler.should_stop = False
-            self.start_button.config(state=tk.DISABLED)
-            self.stop_button.config(state=tk.NORMAL)
-            
-            self.download_thread.start()
 
-    def _download_selected_report_task(self, selected_name, selected_type, date):
-        """執行選定報表下載任務的執行緒"""
         try:
-            # 在open_data中尋找對應的報表資料
-            type_map = {
-                "消防": "Fire_Equipment",
-                "電力每日": "electricity_every_day",
-                "電力每月": "electricity_every_month",
-                "電力每周": "electricity_every_week",
-                "排水每日": "drain_day",
-                "排水每月": "drain_month",
-                "排水每周": "drain_week"
-            }
-            
-            data_key = type_map.get(selected_type)
-            
-            if data_key and data_key in self.pdf_handler.open_data:
-                for report in self.pdf_handler.open_data[data_key]:
-                    if report['name'] == selected_name:
-                        try:
-                            # 檢查是否需要停止
-                            if self.should_stop:
-                                raise Exception("使用者取消下載")
-                                
-                            # 重置進度條
-                            self.reset_progress_bar()
-                            
-                            # 確定輸出資料夾路徑
-                            output_folder = os.path.join(
-                                self.pdf_handler.File_folder,
-                                self.pdf_handler.fire_folder if selected_type == "消防" 
-                                else self.pdf_handler.electricity_folder if "電力" in selected_type 
-                                else self.pdf_handler.drain_folder,
-                                date
-                            )
-                            
-                            # 在下載之前建立資料夾
-                            self.pdf_handler.folder(os.path.join(self.pdf_handler.File_folder, 
-                                self.pdf_handler.fire_folder if selected_type == "消防" 
-                                else self.pdf_handler.electricity_folder if "電力" in selected_type 
-                                else self.pdf_handler.drain_folder))
-                            self.pdf_handler.folder(output_folder)
-                            
-                            # 更新進度條（開始下載）
-                            self.update_progress_bar(0, 100)
-                            self.update_progress(f"開始下載 {selected_name}...\n")
-                            
-                            # 檢查是否需要停止
-                            if self.should_stop:
-                                raise Exception("使用者取消下載")
-                            
-                            # 組合URL
-                            if "BatchAll" in report["api_1"]:
-                                url = f'https://vghtpe-ue.httc.com.tw/Report6BatchAll{report["api_1"]}{date}-01/{date}-{self.pdf_handler.get_monthrange(date)}{report["api_2"]}'
-                            else:
-                                url = f'https://vghtpe-ue.httc.com.tw/Report6{report["api_1"]}{date}{report["api_2"]}'
-                            
-                            output_path = os.path.join(output_folder, f"{selected_name}.pdf")
-                            
-                            # 更新進度條（下載中）
-                            self.update_progress_bar(50, 100)
-                            
-                            # 檢查是否需要停止
-                            if self.should_stop:
-                                raise Exception("使用者取消下載")
-                            
-                            # 下載報表
-                            if self.pdf_handler.download_report(url, output_path, selected_name):
-                                # 檢查是否需要停止
-                                if self.should_stop:
-                                    raise Exception("使用者取消下載")
-                                    
-                                # 更新進度條（下載完成）
-                                self.update_progress_bar(100, 100)
-                                self.update_progress(f"{selected_name} 下載完成\n")
-                                
-                                # 開啟資料夾
-                                self.pdf_handler.startfile(output_folder)
-                            else:
-                                self.update_progress(f"{selected_name} 下載失敗\n")
-                            
-                        except Exception as e:
-                            if str(e) == "使用者取消下載":
-                                self.update_progress("下載已被取消\n")
-                            else:
-                                messagebox.showerror("錯誤", f"下載過程發生錯誤：{str(e)}")
-                        break
-                    
+            months = get_month_range(
+                self.report_start_month_var.get().strip(),
+                self.report_end_month_var.get().strip()
+            )
+        except ValueError as e:
+            messagebox.showwarning("警告", str(e))
+            return
+
+        self.is_downloading = True
+        self.should_stop = False
+        self.pdf_handler.should_stop = False
+        self.start_button.config(state=tk.DISABLED)
+        self.stop_button.config(state=tk.NORMAL)
+
+        self.download_thread = threading.Thread(
+            target=self._download_selected_report_task,
+            args=(selected_name, selected_type, months)
+        )
+        self.download_thread.start()
+
+    def _download_selected_report_task(self, selected_name, selected_type, months):
+        """執行選定報表的跨月份下載任務。"""
+        try:
+            data_key = REPORT_TYPE_MAP.get(selected_type)
+            reports = self.pdf_handler.open_data.get(data_key, [])
+            report = next((item for item in reports if item['name'] == selected_name), None)
+            if report is None:
+                raise ValueError("找不到選取的報表資料")
+
+            category_folder_name = (
+                self.pdf_handler.fire_folder if selected_type == "消防"
+                else self.pdf_handler.electricity_folder if selected_type.startswith("電力")
+                else self.pdf_handler.drain_folder
+            )
+            category_folder = os.path.join(
+                self.pdf_handler.File_folder,
+                category_folder_name
+            )
+            self.pdf_handler.folder(category_folder)
+
+            self.reset_progress_bar()
+            self.update_progress(
+                f"開始下載 {selected_name}，共 {len(months)} 個月份...\n"
+            )
+
+            success_count = 0
+            failed_count = 0
+            for index, month in enumerate(months, start=1):
+                if self.should_stop:
+                    raise Exception("使用者取消下載")
+
+                output_folder = os.path.join(category_folder, month)
+                self.pdf_handler.folder(output_folder)
+                url = build_report_url(report, selected_type, month)
+                output_path = os.path.join(output_folder, f"{selected_name}.pdf")
+
+                if self.pdf_handler.download_report(url, output_path, selected_name):
+                    success_count += 1
+                else:
+                    failed_count += 1
+                self.update_progress_bar(index, len(months))
+
+            self.update_progress(
+                f"跨月份下載完成：成功 {success_count}、失敗 {failed_count}、"
+                f"共 {len(months)} 個月份\n"
+            )
+            self.pdf_handler.startfile(category_folder)
+        except Exception as e:
+            if str(e) == "使用者取消下載":
+                self.update_progress("下載已被取消\n")
+            else:
+                self.update_progress(f"下載過程發生錯誤：{str(e)}\n")
         finally:
-            # 重置下載狀態
             self.is_downloading = False
             self.start_button.config(state=tk.NORMAL)
             self.stop_button.config(state=tk.DISABLED)
@@ -1684,17 +1837,29 @@ class HtmlToPdfGUI(tk.Tk):
             self.pdf_handler.should_stop = False
 
     def update_progress_bar(self, current, total):
-        """更新進度條"""
-        progress = (current / total) * 100
-        self.progress_bar["value"] = progress
-        self.progress_label.config(text=f"下載進度: {progress:.1f}%")
-        self.update_idletasks()
+        """設定進度目標，由主執行緒平滑更新顯示。"""
+        if total <= 0:
+            self.progress_target = 0.0
+            return
+        self.progress_target = max(0.0, min(100.0, (current / total) * 100))
+
+    def _animate_progress_bar(self):
+        """定時平滑更新進度條。"""
+        self.progress_value = get_smooth_progress_value(
+            self.progress_value,
+            self.progress_target
+        )
+        self.progress_bar["value"] = self.progress_value
+        if self.progress_value > 0 or self.progress_target > 0:
+            self.progress_label.config(text=f"下載進度: {self.progress_value:.1f}%")
+        else:
+            self.progress_label.config(text="")
+        self.after(30, self._animate_progress_bar)
 
     def reset_progress_bar(self):
         """重置進度條"""
-        self.progress_bar["value"] = 0
-        self.progress_label.config(text="")
-        self.update_idletasks()
+        self.progress_value = 0.0
+        self.progress_target = 0.0
 
     def clear_progress(self):
         """清除進度顯示區域的內容"""
@@ -1754,10 +1919,7 @@ class DateInputDialog(tk.Toplevel):
     
     def get_last_month(self):
         """取得上個月的年月份"""
-        today = datetime.datetime.now()
-        first_day_this_month = today.replace(day=1)
-        last_day_last_month = first_day_this_month - datetime.timedelta(days=1)
-        return last_day_last_month.strftime("%Y-%m")
+        return get_last_month()
         
     def confirm(self):
         """確認日期輸入"""
@@ -1770,15 +1932,7 @@ class DateInputDialog(tk.Toplevel):
             
     def validate_date(self, date):
         """驗證日期格式"""
-        try:
-            year = int(date[:4])
-            month = int(date[5:7])
-            return (len(date) == 7 and 
-                   year >= 2022 and
-                   date[4] == '-' and
-                   1 <= month <= 12)
-        except:
-            return False
+        return validate_month(date)
 
 if __name__ == '__main__':
     app = HtmlToPdfGUI()

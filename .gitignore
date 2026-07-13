@@ -11,5 +11,7 @@ dist/main/*
 dist/wkhtmltox/*
 dist/*
 build/
+__pycache__/
+*.pyc
 .gitignore
 dist/
