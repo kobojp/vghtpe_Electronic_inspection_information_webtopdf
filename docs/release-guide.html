@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="水電消防報表下載系統固定發布 GitHub Release 的簡短操作手冊">
+  <title>水電消防報表下載系統｜固定發布操作手冊</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --background: #f4f7f6;
+      --surface: #ffffff;
+      --text: #1f2a27;
+      --muted: #5d6c67;
+      --primary: #16705a;
+      --primary-dark: #0f5745;
+      --border: #d9e3df;
+      --code: #17231f;
+      --warning-bg: #fff7df;
+      --warning-border: #e6b83f;
+      --success-bg: #e9f7f1;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--background);
+      color: var(--text);
+      font-family: "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    a {
+      color: var(--primary-dark);
+    }
+
+    .page {
+      width: min(960px, calc(100% - 32px));
+      margin: 36px auto 64px;
+    }
+
+    header,
+    section {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface);
+      box-shadow: 0 8px 24px rgb(25 55 45 / 6%);
+    }
+
+    header {
+      padding: 36px;
+      background: linear-gradient(135deg, #0f5745, #178267);
+      color: #fff;
+    }
+
+    header p {
+      max-width: 720px;
+      margin-bottom: 0;
+      color: #e3f3ed;
+    }
+
+    h1,
+    h2,
+    h3 {
+      line-height: 1.35;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 1.45rem;
+    }
+
+    h3 {
+      margin-bottom: 6px;
+      font-size: 1.05rem;
+    }
+
+    section {
+      margin-top: 20px;
+      padding: 28px 32px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: release-step;
+    }
+
+    .summary li {
+      position: relative;
+      min-height: 88px;
+      padding: 14px 12px;
+      border: 1px solid #b9d9ce;
+      border-radius: 12px;
+      background: var(--success-bg);
+      text-align: center;
+      counter-increment: release-step;
+    }
+
+    .summary li::before {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--primary);
+      font-weight: 700;
+      content: counter(release-step, decimal-leading-zero);
+    }
+
+    .steps {
+      margin: 0;
+      padding-left: 24px;
+    }
+
+    .steps > li {
+      margin: 0 0 22px;
+      padding-left: 8px;
+    }
+
+    .steps > li:last-child {
+      margin-bottom: 0;
+    }
+
+    pre {
+      overflow-x: auto;
+      margin: 10px 0;
+      padding: 16px 18px;
+      border-radius: 10px;
+      background: var(--code);
+      color: #edf7f3;
+      font: 0.92rem/1.65 Consolas, "Courier New", monospace;
+    }
+
+    code {
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    p code,
+    li code,
+    td code {
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: #edf2f0;
+      color: #193c31;
+    }
+
+    .note,
+    .warning {
+      margin: 14px 0;
+      padding: 12px 15px;
+      border-left: 4px solid var(--primary);
+      background: var(--success-bg);
+    }
+
+    .warning {
+      border-left-color: var(--warning-border);
+      background: var(--warning-bg);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--primary-dark);
+    }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 9px 14px;
+      border-radius: 8px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    footer {
+      margin-top: 22px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 760px) {
+      .page {
+        width: min(100% - 20px, 960px);
+        margin-top: 10px;
+      }
+
+      header,
+      section {
+        padding: 22px 20px;
+        border-radius: 12px;
+      }
+
+      .summary {
+        grid-template-columns: 1fr;
+      }
+
+      .summary li {
+        min-height: auto;
+        text-align: left;
+      }
+
+      .summary li::before {
+        display: inline;
+        margin-right: 10px;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .page {
+        width: 100%;
+        margin: 0;
+      }
+
+      header,
+      section {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+
+      .button {
+        border: 1px solid var(--primary);
+        color: var(--primary-dark);
+        background: #fff;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <h1>固定發布 GitHub Release 操作手冊</h1>
+      <p>適用於「水電消防報表下載系統」。程式碼合併到 main 後，只要推送新的版本標籤，GitHub Actions 就會自動測試、編譯，並發布包含 EXE 與 data.json 的 ZIP。</p>
+    </header>
+
+    <section aria-labelledby="quick-flow">
+      <h2 id="quick-flow">每次發布只要完成這 5 步</h2>
+      <ol class="summary">
+        <li>完成修改與測試</li>
+        <li>提交 PR</li>
+        <li>合併至 main</li>
+        <li>推送新版本標籤</li>
+        <li>確認 Release</li>
+      </ol>
+      <div class="note">自動流程正常時，不需要在 GitHub 網站手動建立 Release，也不需要自己壓縮或上傳檔案。</div>
+    </section>
+
+    <section aria-labelledby="first-time">
+      <h2 id="first-time">第一次使用前確認</h2>
+      <ul>
+        <li><code>.github/workflows/release.yml</code> 已經合併到 <code>main</code>。</li>
+        <li>GitHub Actions 頁面可看到 <strong>Build and Release</strong> 工作流程。</li>
+        <li>本機 Git 已設定好 GitHub 權限，且可執行 <code>git fetch</code> 與 <code>git push</code>。</li>
+      </ul>
+      <p>以上設定只需確認一次。之後每次改版直接依照下一節操作。</p>
+    </section>
+
+    <section aria-labelledby="routine">
+      <h2 id="routine">固定發布流程</h2>
+      <ol class="steps">
+        <li>
+          <h3>修改完成後執行測試</h3>
+          <pre><code>pipenv sync
+pipenv run python -m unittest discover -s tests -v</code></pre>
+          <p>確認所有測試顯示 <code>OK</code>，再提交程式碼。</p>
+        </li>
+        <li>
+          <h3>將修改提交到功能分支</h3>
+          <pre><code>git status
+git add README.md main.py tests
+git commit -m "說明本次修改內容"
+git push</code></pre>
+          <p>請依實際修改檔案調整 <code>git add</code>，不要把下載的 PDF、測試輸出或不相關檔案一起提交。</p>
+        </li>
+        <li>
+          <h3>在 GitHub 建立 PR，確認後合併到 main</h3>
+          <p>PR 合併完成後再建立版本標籤。標籤若指向合併前的提交，Release 就不會包含最新修改。</p>
+        </li>
+        <li>
+          <h3>設定新版本號並推送標籤</h3>
+          <pre><code>git fetch origin main
+$version = "v5.0.1"
+git tag $version origin/main
+git push origin $version</code></pre>
+          <div class="warning"><strong>每次都要換成尚未使用過的新版本號。</strong>例如下一版使用 <code>v5.0.2</code>，不可重複推送 <code>v5.0.1</code>。</div>
+        </li>
+        <li>
+          <h3>確認 Actions 與 Release</h3>
+          <p>到 Actions 查看 <strong>Build and Release</strong>。綠色勾勾代表測試、編譯與發布都已完成，再到 Releases 確認 ZIP 已附加在該版本下方。ZIP 內應同時包含 EXE 與 <code>data.json</code>。</p>
+          <div class="links">
+            <a class="button" href="https://github.com/kobojp/vghtpe_Electronic_inspection_information_webtopdf/actions">開啟 GitHub Actions</a>
+            <a class="button" href="https://github.com/kobojp/vghtpe_Electronic_inspection_information_webtopdf/releases">開啟 Releases</a>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section aria-labelledby="versions">
+      <h2 id="versions">版本號怎麼決定</h2>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">改版類型</th>
+            <th scope="col">範例</th>
+            <th scope="col">使用時機</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>修正版</td>
+            <td><code>v5.0.1</code> → <code>v5.0.2</code></td>
+            <td>修正錯誤、微調介面或文件。</td>
+          </tr>
+          <tr>
+            <td>功能版</td>
+            <td><code>v5.0.2</code> → <code>v5.1.0</code></td>
+            <td>新增功能，原本使用方式仍可繼續使用。</td>
+          </tr>
+          <tr>
+            <td>大改版</td>
+            <td><code>v5.1.0</code> → <code>v6.0.0</code></td>
+            <td>使用方式或檔案格式有重大變更。</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section aria-labelledby="troubleshooting">
+      <h2 id="troubleshooting">常見問題</h2>
+
+      <h3>推送標籤後沒有執行 Actions</h3>
+      <p>確認標籤以小寫 <code>v</code> 開頭，例如 <code>v5.0.1</code>，並確認 Release workflow 已存在於該標籤指向的提交。</p>
+
+      <h3>顯示標籤已存在</h3>
+      <p>代表版本號已經用過。不要覆蓋舊標籤，改用下一個新版本號，例如 <code>v5.0.2</code>。</p>
+
+      <h3>Actions 顯示紅色叉叉</h3>
+      <p>點進失敗的步驟查看錯誤。若是測試失敗，先修正程式並重新合併，再建立另一個新標籤；不要重複使用失敗版本的標籤。</p>
+
+      <h3>Release 內沒有 ZIP，或 ZIP 缺少檔案</h3>
+      <p>先確認 Actions 的「Build Windows executable」、「Package release archive」與「Create GitHub Release」皆成功。ZIP 內應包含 <code>水電消防報表下載系統.exe</code> 與 <code>data.json</code>。</p>
+    </section>
+
+    <footer>
+      本手冊可直接以瀏覽器開啟，也適合列印或另存成 PDF。
+    </footer>
+  </main>
+</body>
+</html>
