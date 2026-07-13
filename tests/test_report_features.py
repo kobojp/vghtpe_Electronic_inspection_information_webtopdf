@@ -1,4 +1,5 @@
 import json
+import io
 import os
 import tempfile
 import unittest
@@ -118,6 +119,21 @@ class OpenFolderTests(unittest.TestCase):
 
 
 class ExistingReportTests(unittest.TestCase):
+    def test_progress_logging_handles_cp1252_console(self):
+        handler = object.__new__(htmltopdf)
+        messages = []
+        handler.progress_callback = messages.append
+        console_bytes = io.BytesIO()
+        console = io.TextIOWrapper(console_bytes, encoding="cp1252")
+
+        with mock.patch("sys.stdout", console):
+            handler.log_progress("二門診滅火器(月)檢查 已存在，跳過下載\n")
+
+        self.assertEqual(
+            ["二門診滅火器(月)檢查 已存在，跳過下載\n"],
+            messages,
+        )
+
     def test_non_empty_existing_pdf_is_skipped(self):
         handler = object.__new__(htmltopdf)
         messages = []

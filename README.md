@@ -1,20 +1,28 @@
 # 臺北榮總水電消防每月報表輸出html轉pdf
 
-**問題**
-沒有建立2025-03 資料夾會下載失敗，正常會自動建立
-
-
-**設計理念**
-- 設計新UI
-  * 軟體介面
-    * 消防
-    * 電力
-    * 排水
-  * 
-
 **主要功能：網頁轉換成PDF檔案**
 
 其他網站數據，請自行修改為其他需轉換的數據資料，以下會說明如何建立數據
+
+## 目前版本功能
+
+- 下載消防、電力及排水報表，並依類別與月份建立資料夾。
+- 在「報表查詢」直接選擇報表、起始月份與結束月份，可一次下載跨月、跨年度報表，例如 `2022-01` 至 `2023-12`。
+- 下載前會檢查目標檔案；若同一路徑已有非空白 PDF，會顯示「已存在，跳過下載」，避免重複下載。若檔案大小為 0，則會重新下載。
+- 下載進度會平滑更新，並顯示目前處理狀態。
+- 可勾選「完成後開啟資料夾」，設定會保留供下次使用；也可隨時按「開啟下載資料夾」手動開啟報表根目錄。
+- 支援依關鍵字合併多頁 PDF。
+
+報表預設輸出結構如下：
+
+```text
+水電消防報表/
+├─ 消防/
+│  └─ 2026-02/
+│     └─ 二門診滅火器(月)檢查.pdf
+├─ 電力/
+└─ 排水/
+```
 
 ## 更新資料庫
 * 202302 data.json 新增消防長青樓api資料
@@ -92,8 +100,20 @@ options = {
 ```
 ## 開發人員專用 call(呼叫使用方法)
 * 執行文件：main.py
- - 命令 `python main.py`
- - or `pipenv run python main.py`
+
+先安裝相依套件：
+
+```powershell
+pipenv sync
+```
+
+啟動程式：
+
+```powershell
+pipenv run python main.py
+```
+
+也可在相依套件已安裝的 Python 環境中執行 `python main.py`。
 
 
 
@@ -109,9 +129,10 @@ pyinstaller main.py --add-data "data.json;." --add-binary "wkhtmltox/bin/wkhtmlt
 或是
 
 目前推薦請使用這個編譯
-設定檔案  build.spec，編譯後複製data.json檔案到跟EXE同資料夾
-```
-pyinstaller build.spec --clean
+設定檔案 `build.spec`，所需的 `data.json` 與 wkhtmltopdf 已由設定檔一併打包：
+
+```powershell
+pipenv run pyinstaller build.spec --clean --noconfirm
 ```
 
 
@@ -132,5 +153,33 @@ datas=[('data.json', '.')],
 **此功能特別針對 多頁PDF處理**
 
 ## 新增 報表查詢
-選擇 報表類型 > 點選報表名稱 可下載單一報表PDF
+在主畫面右側依序選擇報表類型、報表名稱、起始月份與結束月份，再按「下載選取報表」。日期格式為 `YYYY-MM`，起始月份不可晚於結束月份。
+
+例如選擇「二門診滅火器(月)檢查」，日期設為 `2022-01` 至 `2023-12`，程式會依月份逐一下載兩年份的報表。已存在且檔案大小大於 0 的 PDF 會自動跳過。
+
 ![](./media/2025-03-23_214313.jpg)
+
+## 測試
+
+功能測試位於 `tests/test_report_features.py`，包含日期區間、報表網址、設定保存、開啟資料夾與既有檔案跳過邏輯。
+
+```powershell
+pipenv run python -m unittest discover -s tests -v
+```
+
+## GitHub Actions 自動發布 Release
+
+專案的 `.github/workflows/release.yml` 會監聽 `v*` 版本標籤。標籤推送到 GitHub 後，Actions 會自動執行測試、編譯 Windows EXE，並建立 GitHub Release 及上傳安裝檔。
+
+日常改版請先把程式碼合併到 `main`，確認測試通過，再建立一個尚未使用過的新版本號：
+
+```powershell
+git fetch origin main
+$version = "v5.0.1"
+git tag $version origin/main
+git push origin $version
+```
+
+接著到 [GitHub Actions](https://github.com/kobojp/vghtpe_Electronic_inspection_information_webtopdf/actions) 查看執行狀態，完成後可在 [Releases](https://github.com/kobojp/vghtpe_Electronic_inspection_information_webtopdf/releases) 下載 EXE。自動流程正常時，不需要再手動建立 Release。
+
+完整但精簡的固定發布步驟、版本號規則與常見問題，請開啟 [未來固定發布流程操作手冊](./docs/release-guide.html)。
