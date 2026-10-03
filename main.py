@@ -612,14 +612,24 @@ class htmltopdf():
         return now.strftime("%H:%M:%S")  # 只返回時間，不加入顏色代碼
     
     # 電子巡檢內建每月報表的PDF，搜尋特定標題並合併一個PDF檔案
-    def pdf_report_merge(self, target_title:str, progress_callback=None, should_stop_callback=None):
+    def pdf_report_merge(self, target_title:str, progress_callback=None, should_stop_callback=None, keep_contractor_page=True, open_folder=True):
         """
         每月報表產出 搜尋特定標題並合併一個PDF
         儲存在 報表合併pdf 資料夾
+        使用 PyMuPDF (fitz) 搜尋整頁文字以確保正確比對。
+        搜尋時允許字元間有換行/空白（PDF 表格常將文字拆行儲存）。
         """
+        import fitz  # PyMuPDF
+
+        def _make_flexible_pattern(keyword):
+            """將關鍵字轉為允許字元間有任意空白/換行的 regex pattern。
+            例如 '醫學科技大樓2F' -> r'醫 \\s*學\\s*科...'
+            """
+            return r'\s*'.join(re.escape(ch) for ch in keyword)
+
         try:
             # 要搜尋的特定標題
-            target_title = target_title  # 例如 '中正樓'
+            target_title = target_title  # 例如 '醫學科技大樓2F'
 
             # 指定PDF文件的路徑
             pdf_path = filedialog.askopenfilename(
@@ -635,6 +645,12 @@ class htmltopdf():
                     progress_callback('路徑輸入錯誤，檔案必須是PDF格式\n')
                 return
 
+            # 記下原始 PDF 檔名，輸出時沿用相同名稱
+            original_filename = os.path.basename(pdf_path)  # 例如 醫學科技大樓滅火器(月)檢查.pdf
+
+            # 建立允許字元間有空白/換行的彈性搜尋 pattern
+            search_pattern = _make_flexible_pattern(target_title)
+
             # 指定儲存檔案的資料夾路徑，資料夾名稱為當前時間的年月日
             now = datetime.datetime.now()
             folder_name = now.strftime("%Y%m%d")
@@ -644,81 +660,210 @@ class htmltopdf():
             if not os.path.exists(output_folder):
                 os.makedirs(output_folder)
 
-            # 讀取PDF文件，並搜索特定標題
-            with open(pdf_path, "rb") as pdf_file:
-                try:
-                    pdf_reader = PyPDF2.PdfFileReader(pdf_file)
-                    merged_pdf_writer = PyPDF2.PdfFileWriter()
-                    found = False
-                    total_pages = pdf_reader.numPages
-                    matched_pages = []  # 先收集匹配的頁面
-                    
+            # 使用 PyMuPDF 讀取 PDF，搜尋整頁文字
+            try:
+                src_doc = fitz.open(pdf_path)
+                found = False
+                total_pages = src_doc.page_count
+                matched_page_nums = []  # 先收集匹配頁碼
+
+                if progress_callback:
+                    progress_callback("開始搜尋匹配頁面...\n")
+
+                # 第一階段：搜尋匹配頁面（搜尋整頁文字，允許字元間空白/換行）
+                for page_num in range(total_pages):
+                    # 檢查是否需要停止
+                    if should_stop_callback and should_stop_callback():
+                        if progress_callback:
+                            progress_callback("使用者取消合併\n")
+                        src_doc.close()
+                        return
+
+                    page = src_doc[page_num]
+                    try:
+                        page_text = page.get_text()
+                    except Exception:
+                        page_text = ""
+
+                    # 更新進度
                     if progress_callback:
-                        progress_callback("開始搜尋匹配頁面...\n")
-                    
-                    # 第一階段：搜尋匹配頁面
+                        progress_callback(f"搜尋頁面 {page_num + 1}/{total_pages}\n", (page_num + 1) / total_pages * 50)  # 前50%進度
+
+                    if re.search(search_pattern, page_text, re.IGNORECASE):
+                        matched_page_nums.append(page_num)
+                        found = True
+
+                # 額外加入「承商駐院工程師」簽核頁（如已勾選）
+                if keep_contractor_page:
+                    contractor_keyword = "承商駐院工程師"
                     for page_num in range(total_pages):
+                        if page_num in matched_page_nums:
+                            continue  # 已在主搜尋結果中，跳過
+                        page = src_doc[page_num]
+                        try:
+                            page_text = page.get_text()
+                        except Exception:
+                            page_text = ""
+                        if contractor_keyword in page_text:
+                            matched_page_nums.append(page_num)
+                            found = True
+                            if progress_callback:
+                                progress_callback(f"加入承商駐院工程師頁（第 {page_num + 1} 頁）\n")
+                    # 確保頁碼順序正確
+                    matched_page_nums.sort()
+
+                # 第二階段：合併匹配頁面
+                if found and not (should_stop_callback and should_stop_callback()):
+                    if progress_callback:
+                        progress_callback(f"找到 {len(matched_page_nums)} 個匹配頁面，開始合併...\n")
+
+                    merged_doc = fitz.open()  # 空白新文件
+                    for idx, page_num in enumerate(matched_page_nums):
                         # 檢查是否需要停止
                         if should_stop_callback and should_stop_callback():
                             if progress_callback:
                                 progress_callback("使用者取消合併\n")
+                            merged_doc.close()
+                            src_doc.close()
                             return
-                            
-                        page = pdf_reader.getPage(page_num)
-                        try:
-                            page_text = page.extractText().strip().split('\n')[0]
-                        except:
-                            page_text = ""
-                        
+
+                        merged_doc.insert_pdf(src_doc, from_page=page_num, to_page=page_num)
+
                         # 更新進度
                         if progress_callback:
-                            progress_callback(f"搜尋頁面 {page_num + 1}/{total_pages}\n", (page_num + 1) / total_pages * 50)  # 前50%進度
-                        
-                        if re.search(target_title, page_text, re.IGNORECASE):
-                            matched_pages.append((page_num, page_text))
-                            found = True
+                            page_preview = src_doc[page_num].get_text()[:40].replace('\n', ' ')
+                            progress_callback(f"合併頁面 {page_num + 1}: {page_preview}\n", 50 + (idx + 1) / len(matched_page_nums) * 50)  # 後50%進度
 
-                    # 第二階段：合併匹配頁面
-                    if found and not (should_stop_callback and should_stop_callback()):
+                    # 儲存合併後的PDF（沿用原始 PDF 檔名）
+                    if not (should_stop_callback and should_stop_callback()):
+                        output_file_name = original_filename          # 與來源檔案相同名稱
+                        output_file_path = os.path.join(output_folder, output_file_name)
+                        merged_doc.save(output_file_path)
                         if progress_callback:
-                            progress_callback(f"找到 {len(matched_pages)} 個匹配頁面，開始合併...\n")
-                        
-                        for idx, (page_num, page_text) in enumerate(matched_pages):
-                            # 檢查是否需要停止
-                            if should_stop_callback and should_stop_callback():
-                                if progress_callback:
-                                    progress_callback("使用者取消合併\n")
-                                return
-                                
-                            page = pdf_reader.getPage(page_num)
-                            merged_pdf_writer.addPage(page)
-                            
-                            # 更新進度
-                            if progress_callback:
-                                progress_callback(f"合併頁面: {page_text}\n", 50 + (idx + 1) / len(matched_pages) * 50)  # 後50%進度
-                        
-                        # 儲存合併後的PDF
-                        if not (should_stop_callback and should_stop_callback()):
-                            output_file_name = target_title + ".pdf"
-                            output_file_path = os.path.join(output_folder, output_file_name)
-                            with open(output_file_path, "wb") as output_file:
-                                merged_pdf_writer.write(output_file)
-                            if progress_callback:
-                                progress_callback(f"已儲存合併後的PDF文件到: {output_file_path}\n")
-                            self.startfile(output_folder)
-                    elif not found:
-                        if progress_callback:
-                            progress_callback("未找到符合的頁面\n")
+                            progress_callback(f"已儲存合併後的PDF文件到: {output_file_path}\n")
+                        # 依勾選決定是否開啟資料夾
+                        if open_folder:
+                            os.startfile(os.path.abspath(output_folder))
 
-                except Exception as e:
+
+                    merged_doc.close()
+                elif not found:
                     if progress_callback:
-                        progress_callback(f"處理PDF時發生錯誤: {str(e)}\n")
-                    raise
+                        progress_callback("未找到符合的頁面\n")
+
+                src_doc.close()
+
+            except Exception as e:
+                if progress_callback:
+                    progress_callback(f"處理PDF時發生錯誤: {str(e)}\n")
+                raise
 
         except Exception as e:
             if progress_callback:
                 progress_callback(f"發生錯誤: {str(e)}\n")
             raise
+
+    def pdf_batch_extract(self, target_title: str, pdf_paths: list,
+                          progress_callback=None, should_stop_callback=None,
+                          keep_contractor_page=True, open_folder=True):
+        """
+        批次搜尋擷取：對多個 PDF 各自搜尋關鍵字並輸出獨立 PDF。
+        每個 PDF 輸出的檔名與原始相同，儲存在 報表合併pdf/YYYYMMDD/ 資料夾。
+        """
+        import fitz  # PyMuPDF
+
+        def _make_flexible_pattern(keyword):
+            return r'\s*'.join(re.escape(ch) for ch in keyword)
+
+        import datetime
+        now = datetime.datetime.now()
+        folder_name = now.strftime("%Y%m%d")
+        output_folder = os.path.join('報表合併pdf', folder_name)
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+
+        search_pattern = _make_flexible_pattern(target_title)
+        total_files = len(pdf_paths)
+        success_count = 0
+
+        for file_idx, pdf_path in enumerate(pdf_paths):
+            if should_stop_callback and should_stop_callback():
+                if progress_callback:
+                    progress_callback("使用者取消批次擷取\n")
+                break
+
+            original_filename = os.path.basename(pdf_path)
+            if progress_callback:
+                progress_callback(
+                    f"\n[{file_idx+1}/{total_files}] 處理: {original_filename}\n",
+                    file_idx / total_files * 100
+                )
+
+            try:
+                src_doc = fitz.open(pdf_path)
+                total_pages = src_doc.page_count
+                matched_page_nums = []
+
+                # 第一階段：搜尋關鍵字頁
+                for page_num in range(total_pages):
+                    if should_stop_callback and should_stop_callback():
+                        src_doc.close()
+                        return
+                    page = src_doc[page_num]
+                    try:
+                        page_text = page.get_text()
+                    except Exception:
+                        page_text = ""
+                    if re.search(search_pattern, page_text, re.IGNORECASE):
+                        matched_page_nums.append(page_num)
+
+                # 額外加入承商駐院工程師頁
+                if keep_contractor_page:
+                    for page_num in range(total_pages):
+                        if page_num in matched_page_nums:
+                            continue
+                        page = src_doc[page_num]
+                        try:
+                            page_text = page.get_text()
+                        except Exception:
+                            page_text = ""
+                        if "承商駐院工程師" in page_text:
+                            matched_page_nums.append(page_num)
+                    matched_page_nums.sort()
+
+                if matched_page_nums:
+                    if progress_callback:
+                        progress_callback(
+                            f"  找到 {len(matched_page_nums)} 頁，輸出中...\n"
+                        )
+                    merged_doc = fitz.open()
+                    for page_num in matched_page_nums:
+                        merged_doc.insert_pdf(src_doc, from_page=page_num, to_page=page_num)
+
+                    output_path = os.path.join(output_folder, original_filename)
+                    merged_doc.save(output_path)
+                    merged_doc.close()
+                    success_count += 1
+                    if progress_callback:
+                        progress_callback(f"  已輸出: {output_path}\n")
+                else:
+                    if progress_callback:
+                        progress_callback(f"  未找到符合頁面，略過\n")
+
+                src_doc.close()
+
+            except Exception as e:
+                if progress_callback:
+                    progress_callback(f"  處理時發生錯誤: {str(e)}\n")
+
+        if progress_callback:
+            progress_callback(
+                f"\n批次擷取完成！共 {total_files} 個檔案，成功輸出 {success_count} 個\n",
+                100
+            )
+        # 依勾選決定是否開啟資料夾
+        if open_folder:
+            os.startfile(os.path.abspath(output_folder))
 
     def set_progress_callback(self, callback):
         """設置進度回調函數"""
@@ -903,13 +1048,13 @@ class HtmlToPdfGUI(tk.Tk):
         
         # 計算窗口位置
         window_width = 960
-        window_height = 820
+        window_height = 980
         x = (screen_width - window_width) // 2
-        y = (screen_height - window_height) // 2
-        
+        y = max(0, (screen_height - window_height) // 2)
+
         # 設置窗口大小和位置（只設置一次）
         self.geometry(f"{window_width}x{window_height}+{x}+{y}")
-        self.minsize(900, 800)
+        self.minsize(900, 880)
         
         # 定義按鈕樣式
         self.button_style = {
@@ -965,14 +1110,24 @@ class HtmlToPdfGUI(tk.Tk):
 
     def create_widgets(self):
         """建立所有 GUI 元件"""
+        # ── 視窗自適應：讓 row=0 / col=0 隨視窗縮放 ─────────────────
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
+
         # 建立主框架
         main_frame = ttk.Frame(self, padding="10")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        
+        # main_frame 的左欄（left_frame）可伸縮，右欄固定
+        main_frame.rowconfigure(0, weight=1)
+        main_frame.columnconfigure(0, weight=1)
+
         # 左側區域
         left_frame = ttk.Frame(main_frame)
-        left_frame.grid(row=0, column=0, padx=5, sticky=(tk.N, tk.S))
-        
+        left_frame.grid(row=0, column=0, padx=5, sticky=(tk.N, tk.S, tk.W, tk.E))
+        # left_frame row=5（進度文字區）可垂直伸縮，其餘固定
+        left_frame.rowconfigure(5, weight=1)
+        left_frame.columnconfigure(0, weight=1)
+
         # 右側區域
         right_frame = ttk.Frame(main_frame)
         right_frame.grid(row=0, column=1, padx=5, sticky=(tk.N, tk.S))
@@ -1155,8 +1310,23 @@ class HtmlToPdfGUI(tk.Tk):
         ).grid(row=0, column=0, padx=5)
 
         self.building_var = tk.StringVar()
+
+        def _clean_keyword(*_):
+            """自動去除從PDF複製的換行/空白，例如 '醫\n學\n科' → '醫學科'"""
+            if getattr(self, '_cleaning_kw', False):
+                return
+            raw = self.building_var.get()
+            # 去除所有空白字元（換行、空格、Tab、全形空格）
+            cleaned = re.sub(r'[\s\u3000]+', '', raw)
+            if cleaned != raw:
+                self._cleaning_kw = True
+                self.building_var.set(cleaned)
+                self._cleaning_kw = False
+
+        self.building_var.trace_add('write', _clean_keyword)
+
         ttk.Entry(
-            pdf_merge_frame, 
+            pdf_merge_frame,
             textvariable=self.building_var
         ).grid(row=0, column=1, padx=5)
 
@@ -1167,6 +1337,38 @@ class HtmlToPdfGUI(tk.Tk):
             **self.button_style
         ).grid(row=0, column=2, padx=5)
 
+        # 承商駐院工程師頁勾選
+        self.keep_contractor_var = tk.BooleanVar(value=True)
+        ttk.Checkbutton(
+            pdf_merge_frame,
+            text="保留承商駐院工程師頁",
+            variable=self.keep_contractor_var
+        ).grid(row=1, column=0, columnspan=2, sticky=tk.W, padx=5, pady=(4, 0))
+
+        # 批次搜尋擷取按鈕（同行右側）
+        tk.Button(
+            pdf_merge_frame,
+            text="批次搜尋擷取",
+            command=self.batch_extract_pdf,
+            **self.button_style
+        ).grid(row=1, column=2, padx=5, pady=(4, 0))
+
+        # 說明文字（改放 row=2）
+        ttk.Label(
+            pdf_merge_frame,
+            text="批次擷取：一次選多個PDF，各自輸出",
+            font=('微軟正黑體', 8),
+            foreground='#888888'
+        ).grid(row=2, column=0, columnspan=3, sticky=tk.W, padx=5, pady=(2, 0))
+
+        # PDF搜尋完成後開啟資料夾勾選
+        self.pdf_open_folder_var = tk.BooleanVar(value=True)
+        ttk.Checkbutton(
+            pdf_merge_frame,
+            text="完成後開啟資料夾",
+            variable=self.pdf_open_folder_var
+        ).grid(row=3, column=0, columnspan=3, sticky=tk.W, padx=5, pady=(4, 0))
+
         # 新增說明文字
         ttk.Label(
             merge_frame,
@@ -1175,18 +1377,24 @@ class HtmlToPdfGUI(tk.Tk):
             foreground='#666666'  # 使用灰色文字
         ).grid(row=1, column=0, columnspan=3, pady=(5, 0), sticky='w')
         
-        # 進度顯示區域 (將原本的 row=4 改為 row=5)
+        # 進度顯示區域
         progress_frame = ttk.Frame(left_frame)
-        progress_frame.grid(row=5, column=0, columnspan=2, pady=3)
-        
+        progress_frame.grid(row=5, column=0, columnspan=2,
+                            pady=3, sticky=(tk.N, tk.S, tk.W, tk.E))
+        # progress_frame 內：row=2（文字區）可伸縮
+        progress_frame.rowconfigure(2, weight=1)
+        progress_frame.columnconfigure(0, weight=1)
+
         # 進度條框架
         progress_bar_frame = ttk.Frame(progress_frame)
-        progress_bar_frame.grid(row=0, column=0, columnspan=2, pady=3)
-        
+        progress_bar_frame.grid(row=0, column=0, columnspan=2,
+                                pady=3, sticky=(tk.W, tk.E))
+        progress_bar_frame.columnconfigure(0, weight=1)
+
         # 進度條標籤
         self.progress_label = ttk.Label(progress_bar_frame, text="")
         self.progress_label.grid(row=0, column=0, columnspan=2, pady=2)
-        
+
         # 進度條
         self.progress_bar = ttk.Progressbar(
             progress_bar_frame,
@@ -1194,28 +1402,35 @@ class HtmlToPdfGUI(tk.Tk):
             length=300,
             mode="determinate"
         )
-        self.progress_bar.grid(row=1, column=0, columnspan=2, pady=2)
+        self.progress_bar.grid(row=1, column=0, columnspan=2,
+                               pady=2, sticky=(tk.W, tk.E))
         self.progress_value = 0.0
         self.progress_target = 0.0
         self.after(30, self._animate_progress_bar)
-        
-        # 文字顯示區域
+
+        # 文字顯示區域（隨視窗高度彈性伸縮）
         text_frame = ttk.Frame(progress_frame)
-        text_frame.grid(row=2, column=0, columnspan=2)
-        
+        text_frame.grid(row=2, column=0, columnspan=2,
+                        sticky=(tk.N, tk.S, tk.W, tk.E))
+        text_frame.rowconfigure(0, weight=1)
+        text_frame.columnconfigure(0, weight=1)
+
         self.progress_text = tk.Text(text_frame, height=8, width=50)
-        self.progress_text.grid(row=0, column=0)
-        
+        self.progress_text.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.W, tk.E))
+
         # 加入垂直捲動條
-        scrollbar = ttk.Scrollbar(text_frame, orient="vertical", command=self.progress_text.yview)
+        scrollbar = ttk.Scrollbar(text_frame, orient="vertical",
+                                  command=self.progress_text.yview)
         scrollbar.grid(row=0, column=1, sticky="ns")
         self.progress_text.configure(yscrollcommand=scrollbar.set)
-        
+
         # 加入水平捲動條
-        h_scrollbar = ttk.Scrollbar(text_frame, orient="horizontal", command=self.progress_text.xview)
+        h_scrollbar = ttk.Scrollbar(text_frame, orient="horizontal",
+                                    command=self.progress_text.xview)
         h_scrollbar.grid(row=1, column=0, sticky="ew")
-        self.progress_text.configure(xscrollcommand=h_scrollbar.set, wrap=tk.NONE)  # 設置不自動換行
-        
+        self.progress_text.configure(xscrollcommand=h_scrollbar.set,
+                                     wrap=tk.NONE)
+
         # 清除按鈕
         button_frame = ttk.Frame(progress_frame)
         button_frame.grid(row=3, column=0, columnspan=2, pady=5)
@@ -1590,13 +1805,14 @@ class HtmlToPdfGUI(tk.Tk):
         self.pdf_handler.should_stop = False  # 重置PDF處理器的停止標誌
         self.stop_merge_button.config(state=tk.NORMAL)
         
+        keep_contractor = self.keep_contractor_var.get()
         self.merge_thread = threading.Thread(
             target=self._merge_pdf_task,
-            args=(building,)
+            args=(building, keep_contractor)
         )
         self.merge_thread.start()
 
-    def _merge_pdf_task(self, building):
+    def _merge_pdf_task(self, building, keep_contractor=True):
         """執行PDF合併任務的執行緒"""
         try:
             self.reset_progress_bar()
@@ -1620,7 +1836,9 @@ class HtmlToPdfGUI(tk.Tk):
                 self.pdf_handler.pdf_report_merge(
                     building,
                     progress_callback=progress_callback,
-                    should_stop_callback=should_stop_callback
+                    should_stop_callback=should_stop_callback,
+                    keep_contractor_page=keep_contractor,
+                    open_folder=self.pdf_open_folder_var.get()
                 )
             except Exception as e:
                 if str(e) == "使用者取消合併":
@@ -1651,6 +1869,75 @@ class HtmlToPdfGUI(tk.Tk):
             self.is_merging = False
             self.update_progress("合併已停止\n")
             self.stop_merge_button.config(state=tk.DISABLED)
+
+    def batch_extract_pdf(self):
+        """批次搜尋擷取 PDF：選多個 PDF，各自輸出"""
+        building = self.building_var.get().strip()
+        if not building:
+            messagebox.showwarning("警告", "請先輸入搜尋關鍵字")
+            return
+
+        # 先提示使用者如何多選
+        messagebox.showinfo(
+            "多選說明",
+            "請在對話框中：\n"
+            "• 按住 Ctrl 並點選多個檔案\n"
+            "• 或按住 Shift 連續選取\n"
+            "選完後按「開啟」"
+        )
+
+        # 多選 PDF（askopenfilenames 支援 Ctrl+Click 多選）
+        pdf_paths = filedialog.askopenfilenames(
+            title="批次搜尋擷取 — 按住 Ctrl 可多選PDF",
+            filetypes=[("PDF files", "*.pdf")]
+        )
+        if not pdf_paths:
+            return
+
+        # 防止重複觸發
+        if getattr(self, '_is_batch_extracting', False):
+            messagebox.showwarning("警告", "批次擷取進行中")
+            return
+
+        self._is_batch_extracting = True
+        self.should_stop = False
+        self.pdf_handler.should_stop = False
+        keep_contractor = self.keep_contractor_var.get()
+
+        self.update_progress(
+            f"開始批次搜尋擷取，共 {len(pdf_paths)} 個 PDF，關鍵字：{building}\n"
+        )
+
+        self.batch_extract_thread = threading.Thread(
+            target=self._batch_extract_task,
+            args=(building, list(pdf_paths), keep_contractor),
+            daemon=True
+        )
+        self.batch_extract_thread.start()
+
+    def _batch_extract_task(self, building, pdf_paths, keep_contractor):
+        """執行緒：批次擷取"""
+        try:
+            def progress_callback(msg, pct=None):
+                self.update_progress(msg)
+                if pct is not None:
+                    # pct 是 0~100 的百分比，直接更新進度目標
+                    self.after(0, lambda p=pct: setattr(self, 'progress_target', float(p)))
+
+            self.pdf_handler.pdf_batch_extract(
+                building,
+                pdf_paths,
+                progress_callback=progress_callback,
+                should_stop_callback=lambda: self.should_stop,
+                keep_contractor_page=keep_contractor,
+                open_folder=self.pdf_open_folder_var.get()
+            )
+        except Exception as e:
+            self.update_progress(f"批次擷取發生錯誤: {str(e)}\n")
+        finally:
+            self._is_batch_extracting = False
+            self.should_stop = False
+            self.pdf_handler.should_stop = False
 
     def search_fire_report(self):
         """搜索并下载消防报表"""
