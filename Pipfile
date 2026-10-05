@@ -11,6 +11,7 @@ pyinstaller = "*"
 colorama = "*"
 pypdf2 = "<3.0"
 pillow = "*"
+pymupdf = "*"
 
 [dev-packages]
 
