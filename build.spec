@@ -11,6 +11,8 @@ a = Analysis(
         ('vghtpe.png', '.'),  # 包含圖示檔案
     ],
     hiddenimports=[
+        'fitz',
+        'pymupdf',
         'PIL',
         'PIL._imagingtk',
         'PIL._tkinter_finder',
