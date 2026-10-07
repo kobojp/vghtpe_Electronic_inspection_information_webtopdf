@@ -1296,6 +1296,35 @@ class HtmlToPdfGUI(tk.Tk):
             **self.button_style
         ).grid(row=0, column=2, padx=5)
 
+        # 範圍月份下載（開始月份 ~ 結束月份）
+        fire_range_frame = ttk.Frame(fire_search_frame)
+        fire_range_frame.grid(row=1, column=0, columnspan=3, sticky=tk.W, pady=(8, 0))
+
+        _last_month = get_last_month()
+        self.fire_start_month_var = tk.StringVar(value=_last_month)
+        self.fire_end_month_var = tk.StringVar(value=_last_month)
+
+        ttk.Label(fire_range_frame, text="開始月份:").grid(row=0, column=0, padx=(5, 2))
+        ttk.Entry(
+            fire_range_frame,
+            textvariable=self.fire_start_month_var,
+            width=9
+        ).grid(row=0, column=1, padx=2)
+
+        ttk.Label(fire_range_frame, text="結束月份:").grid(row=0, column=2, padx=(8, 2))
+        ttk.Entry(
+            fire_range_frame,
+            textvariable=self.fire_end_month_var,
+            width=9
+        ).grid(row=0, column=3, padx=2)
+
+        tk.Button(
+            fire_range_frame,
+            text="範圍月份下載",
+            command=self.search_fire_range_report,
+            **self.button_style
+        ).grid(row=0, column=4, padx=(8, 5))
+
         # PDF 合併區域
         merge_frame = ttk.LabelFrame(left_frame, text="PDF合併", padding="10")
         merge_frame.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=3)
@@ -1406,6 +1435,8 @@ class HtmlToPdfGUI(tk.Tk):
                                pady=2, sticky=(tk.W, tk.E))
         self.progress_value = 0.0
         self.progress_target = 0.0
+        self._progress_hide_job = None
+        self._progress_hidden = False
         self.after(30, self._animate_progress_bar)
 
         # 文字顯示區域（隨視窗高度彈性伸縮）
@@ -1601,7 +1632,7 @@ class HtmlToPdfGUI(tk.Tk):
             self.is_downloading = False
             self.start_button.config(state=tk.NORMAL)
             self.stop_button.config(state=tk.DISABLED)
-            self.reset_progress_bar()
+            self.finish_progress_bar()
 
     def stop_download(self):
         """停止下載"""
@@ -1787,7 +1818,7 @@ class HtmlToPdfGUI(tk.Tk):
             self.stop_button.config(state=tk.DISABLED)
             self.should_stop = False
             self.pdf_handler.should_stop = False
-            self.reset_progress_bar()
+            self.finish_progress_bar()
                 
     def merge_pdf(self):
         """合併PDF功能"""
@@ -1852,7 +1883,7 @@ class HtmlToPdfGUI(tk.Tk):
         finally:
             self.is_merging = False
             self.stop_merge_button.config(state=tk.DISABLED)
-            self.reset_progress_bar()
+            self.finish_progress_bar()
             self.should_stop = False  # 重置停止標誌
 
     def stop_merge(self):
@@ -2038,9 +2069,92 @@ class HtmlToPdfGUI(tk.Tk):
             self.is_downloading = False
             self.start_button.config(state=tk.NORMAL)
             self.stop_button.config(state=tk.DISABLED)
-            self.reset_progress_bar()  # 重置進度條
+            self.finish_progress_bar()  # 100% 保留後自動隱藏
             
             # 重置停止標誌
+            self.should_stop = False
+            self.pdf_handler.should_stop = False
+
+    def search_fire_range_report(self):
+        """消防搜尋：依開始/結束月份範圍批次下載。"""
+        if self.is_downloading:
+            return
+
+        search_text = self.fire_search_var.get()
+        if not search_text:
+            messagebox.showwarning("警告", "請輸入要搜尋的消防設備名稱")
+            return
+
+        try:
+            months = get_month_range(
+                self.fire_start_month_var.get().strip(),
+                self.fire_end_month_var.get().strip()
+            )
+        except ValueError as e:
+            messagebox.showwarning("警告", str(e))
+            return
+
+        self.is_downloading = True
+        self.should_stop = False
+        self.pdf_handler.should_stop = False
+        self.start_button.config(state=tk.DISABLED)
+        self.stop_button.config(state=tk.NORMAL)
+
+        self.download_thread = threading.Thread(
+            target=self._search_fire_range_task,
+            args=(months, search_text)
+        )
+        self.download_thread.start()
+
+    def _search_fire_range_task(self, months, search_text):
+        """執行消防搜尋範圍月份下載任務的執行緒。"""
+        try:
+            self.reset_progress_bar()
+            self.update_progress(
+                f"開始搜尋消防設備: {search_text}（{months[0]} ~ {months[-1]}，共 {len(months)} 個月份）\n"
+            )
+
+            find = [
+                i for i in self.pdf_handler.open_data['Fire_Equipment']
+                if re.search(search_text, i['name'])
+            ]
+            if not find:
+                self.update_progress(f"找不到符合的報表：{search_text}\n")
+                return
+
+            self.update_progress(f"消防 共有 {len(find)} 個PDF × {len(months)} 個月份\n")
+            fire_root = os.path.join(self.pdf_handler.File_folder, self.pdf_handler.fire_folder)
+            self.pdf_handler.folder(fire_root)
+
+            total = len(find) * len(months)
+            done = 0
+            success_count = 0
+            for month in months:
+                month_folder = os.path.join(fire_root, month)
+                self.pdf_handler.folder(month_folder)
+                for item in find:
+                    if self.should_stop:
+                        raise Exception("使用者取消下載")
+                    name = item['name']
+                    url = f'https://vghtpe-ue.httc.com.tw/Report6{item["api_1"]}{month}{item["api_2"]}'
+                    output_path = os.path.join(month_folder, f"{name}.pdf")
+                    if self.pdf_handler.download_report(url, output_path, name):
+                        success_count += 1
+                    done += 1
+                    self.update_progress_bar(done, total)
+
+            self.update_progress(f"範圍下載完成，成功 {success_count}/{total} 個檔案\n")
+            self.pdf_handler.startfile(fire_root)
+        except Exception as e:
+            if str(e) == "使用者取消下載":
+                self.update_progress("下載已被取消\n")
+            else:
+                self.update_progress(f"下載過程發生錯誤: {str(e)}\n")
+        finally:
+            self.is_downloading = False
+            self.start_button.config(state=tk.NORMAL)
+            self.stop_button.config(state=tk.DISABLED)
+            self.finish_progress_bar()
             self.should_stop = False
             self.pdf_handler.should_stop = False
 
@@ -2136,6 +2250,7 @@ class HtmlToPdfGUI(tk.Tk):
             self.stop_button.config(state=tk.DISABLED)
             self.should_stop = False
             self.pdf_handler.should_stop = False
+            self.finish_progress_bar()
 
     def update_progress_bar(self, current, total):
         """設定進度目標，由主執行緒平滑更新顯示。"""
@@ -2155,12 +2270,40 @@ class HtmlToPdfGUI(tk.Tk):
             self.progress_label.config(text=f"下載進度: {self.progress_value:.1f}%")
         else:
             self.progress_label.config(text="")
+
+        # 跑到 100% 後停留片刻，自動隱藏進度條
+        if (self.progress_value >= 99.9 and self.progress_target >= 100
+                and self._progress_hide_job is None and not self._progress_hidden):
+            self._progress_hide_job = self.after(1500, self._hide_progress_bar)
         self.after(30, self._animate_progress_bar)
 
+    def _hide_progress_bar(self):
+        """隱藏進度條與進度文字（保留其佔位設定以便再次顯示）。"""
+        self._progress_hide_job = None
+        self._progress_hidden = True
+        self.progress_bar.grid_remove()
+        self.progress_label.grid_remove()
+
+    def _show_progress_bar(self):
+        """重新顯示進度條，並取消尚未執行的隱藏動作。"""
+        if self._progress_hide_job is not None:
+            self.after_cancel(self._progress_hide_job)
+            self._progress_hide_job = None
+        if self._progress_hidden:
+            self._progress_hidden = False
+            self.progress_label.grid()
+            self.progress_bar.grid()
+
     def reset_progress_bar(self):
-        """重置進度條"""
+        """重置進度條（任務開始時使用，並確保進度條可見）"""
         self.progress_value = 0.0
         self.progress_target = 0.0
+        self.after(0, self._show_progress_bar)
+
+    def finish_progress_bar(self):
+        """任務結束：完成(100%)則保留後自動隱藏；中斷/失敗則直接歸零。"""
+        if self.progress_target < 100:
+            self.reset_progress_bar()
 
     def clear_progress(self):
         """清除進度顯示區域的內容"""
