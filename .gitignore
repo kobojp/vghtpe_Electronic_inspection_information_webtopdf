@@ -15,3 +15,17 @@ __pycache__/
 *.pyc
 .gitignore
 dist/
+
+# Desktop web UI and local build/test state
+.venv/
+.cache/
+frontend/node_modules/
+frontend/dist/
+frontend/test-results/
+logs/
+*.zip
+水電消防報表/
+報表合併pdf/
+
+# 報表管理的本機備份
+data.json.bak

@@ -1,0 +1,86 @@
+import { test, expect } from './fixtures';
+import { mkdir } from 'node:fs/promises';
+import { resolve } from 'node:path';
+
+test('report management: create, edit, confirm delete, refresh and revision conflict', async ({ page }) => {
+  const failures: string[] = [];
+  page.on('pageerror', error => failures.push(error.message));
+  await page.goto('/');
+  await expect(page.locator('[data-app-ready]')).toBeVisible();
+  await page.getByLabel('起始月份').fill('2026-01');
+  await page.getByLabel('結束月份').fill('2026-02');
+  const management = () => page.getByRole('button', { name: /報表管理.*新增與維護報表/ }).click();
+  const downloads = () => page.getByRole('button', { name: /報表下載.*瀏覽與下載報表/ }).click();
+  await management();
+  await expect(page.getByRole('heading', { name: '報表管理', exact: true })).toBeVisible();
+  await expect(page.locator('.catalog-storage')).toContainText('data.json');
+  await page.getByRole('button', { name: '新增報表', exact: true }).click();
+  await page.getByLabel('報表名稱', { exact: true }).fill('測試新增消防報表');
+  await page.getByLabel('網址參數一（api_1）').fill('/900/');
+  await page.getByLabel('網址參數二（api_2）').fill('/900/901');
+  await page.getByRole('button', { name: '儲存報表', exact: true }).click();
+  await expect(page.getByRole('status')).toHaveText('報表已新增，下載清單已同步。');
+  await downloads();
+  await page.getByLabel('名稱搜尋').fill('測試新增消防報表');
+  await expect(page.locator('.report-table:visible tbody tr')).toHaveCount(1);
+  await page.getByRole('checkbox', { name: '選取 測試新增消防報表', exact: true }).check();
+  await expect(page.getByLabel('起始月份')).toHaveValue('2026-01');
+  await expect(page.getByLabel('結束月份')).toHaveValue('2026-02');
+  await management();
+  await page.getByLabel('搜尋管理報表').fill('測試新增消防報表');
+  await page.getByRole('button', { name: '修改 測試新增消防報表', exact: true }).click();
+  await expect(page.getByLabel('網址參數一（api_1）')).toHaveValue('/900/');
+  await page.getByLabel('報表名稱', { exact: true }).fill('測試修改排水報表');
+  await page.getByRole('combobox', { name: '報表類型', exact: true }).selectOption('排水每月');
+  await page.getByRole('button', { name: '儲存報表', exact: true }).click();
+  await expect(page.getByRole('status')).toHaveText('報表已更新，下載清單已同步。');
+  await downloads();
+  await expect(page.locator('.selection-toolbar:visible')).toContainText('已選 0 份');
+  await expect(page.getByLabel('起始月份')).toHaveValue('2026-01');
+  await page.getByLabel('名稱搜尋').fill('測試修改排水報表');
+  await expect(page.locator('.report-table:visible tbody tr')).toContainText('排水每月');
+  await page.reload();
+  await management();
+  await page.getByLabel('搜尋管理報表').fill('測試修改排水報表');
+  await page.getByRole('button', { name: '修改 測試修改排水報表', exact: true }).click();
+  await expect(page.getByRole('combobox', { name: '報表類型', exact: true })).toHaveValue('排水每月');
+  await mkdir(resolve('../.cache/screenshots'), { recursive: true });
+  await page.screenshot({ path: resolve('../.cache/screenshots/report-manager.png') });
+  await page.getByRole('button', { name: '取消編輯' }).click();
+  await page.getByRole('button', { name: '刪除 測試修改排水報表', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('測試修改排水報表');
+  await page.getByRole('button', { name: '取消刪除' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '修改 測試修改排水報表', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '刪除 測試修改排水報表', exact: true }).click();
+  await page.getByRole('button', { name: '確認刪除', exact: true }).click();
+  await expect(page.getByRole('status')).toHaveText('報表已刪除，已下載的 PDF 保留。');
+  await expect(page.locator('.catalog-list .report-table tbody tr')).toHaveCount(0);
+
+  // A second client changes the file while the form still refers to the old revision.
+  await page.getByRole('button', { name: '新增報表', exact: true }).click();
+  await page.getByLabel('報表名稱', { exact: true }).fill('不應覆蓋的新報表');
+  await page.getByLabel('網址參數一（api_1）').fill('/902/');
+  await page.getByLabel('網址參數二（api_2）').fill('/902/903');
+  const bootstrap = await (await page.request.get('/api/bootstrap')).json();
+  const catalog = await (await page.request.get('/api/catalog', { headers: { 'X-App-Token': bootstrap.token } })).json();
+  const external = await page.request.post('/api/catalog/reports', {
+    headers: { 'X-App-Token': bootstrap.token },
+    data: { revision: catalog.revision, name: '其他視窗新增報表', report_type: '消防', api_1: '/904/', api_2: '/904/905' },
+  });
+  expect(external.status()).toBe(201);
+  await page.getByRole('button', { name: '儲存報表', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('報表資料已變更');
+  await expect(page.getByLabel('報表名稱', { exact: true })).toHaveValue('不應覆蓋的新報表');
+  await page.getByRole('button', { name: '重新載入資料' }).click();
+  await expect(page.getByRole('status')).toHaveText('已重新載入報表資料。');
+  await expect(page.getByRole('heading', { name: '新增報表', exact: true })).toHaveCount(0);
+  await page.getByLabel('搜尋管理報表').fill('其他視窗新增報表');
+  await expect(page.locator('.catalog-list .report-table tbody tr')).toHaveCount(1);
+  await page.getByRole('button', { name: '刪除 其他視窗新增報表', exact: true }).click();
+  await page.getByRole('button', { name: '確認刪除', exact: true }).click();
+  await expect(page.getByRole('status')).toHaveText('報表已刪除，已下載的 PDF 保留。');
+  await downloads();
+  await expect(page.getByText('共 378 份報表', { exact: true }).first()).toBeVisible();
+  expect(failures).toEqual([]);
+});
