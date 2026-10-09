@@ -31,7 +31,7 @@ class CatalogTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.path = Path(self.temp.name) / "data.json"
+        self.path = Path(self.temp.name).resolve() / "data.json"
         self.original = sample_data()
         self.path.write_text(json.dumps(self.original, ensure_ascii=False), encoding="utf-8")
         self.store = CatalogStore(self.path)
@@ -144,7 +144,7 @@ class CatalogApiTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.directory = Path(self.temp.name)
+        self.directory = Path(self.temp.name).resolve()
         self.path = self.directory / "data.json"
         self.path.write_text(json.dumps(sample_data(), ensure_ascii=False), encoding="utf-8")
         self.app = create_app(data_path=self.path, settings_path=self.directory / "settings.json")

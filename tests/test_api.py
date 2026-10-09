@@ -14,7 +14,7 @@ from tests.test_report_features import make_pdf
 class ApiTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.directory = Path(self.temp.name)
+        self.directory = Path(self.temp.name).resolve()
         self.settings_path = self.directory / "settings.json"
         save_settings({"output_folder": str(self.directory / "reports"), "extract_folder": str(self.directory / "extracts"), "open_folder_after_completion": False}, self.settings_path)
         self.dialogs = mock.Mock()
