@@ -1,6 +1,6 @@
 import unittest
 
-import fitz
+import pymupdf as fitz
 
 
 class PdfDependencyTests(unittest.TestCase):

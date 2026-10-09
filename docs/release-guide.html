@@ -294,9 +294,12 @@
       <ol class="steps">
         <li>
           <h3>修改完成後執行測試</h3>
-          <pre><code>pipenv sync
+          <pre><code>pipenv sync --dev
+npm.cmd ci --prefix frontend
+npm.cmd --prefix frontend test
+npm.cmd --prefix frontend run build
 pipenv run python -m unittest discover -s tests -v</code></pre>
-          <p>確認所有測試顯示 <code>OK</code>，再提交程式碼。</p>
+          <p>確認前端建置成功、前端測試通過，且 Python 測試顯示 <code>OK</code>，再提交程式碼。</p>
         </li>
         <li>
           <h3>將修改提交到功能分支</h3>

@@ -1,67 +1,30 @@
 # -*- mode: python ; coding: utf-8 -*-
+from pathlib import Path
 
-block_cipher = None
+project = Path(SPECPATH)
+frontend = project / "frontend" / "dist"
+if not (frontend / "index.html").is_file():
+    raise RuntimeError("請先執行 npm --prefix frontend run build")
 
 a = Analysis(
-    ['main.py'],
-    pathex=[],
-    binaries=[('wkhtmltopdf.exe', '.')],  # 包含 wkhtmltopdf.exe
-    datas=[
-        ('data.json', '.'),  # 包含 data.json
-        ('vghtpe.png', '.'),  # 包含圖示檔案
-    ],
-    hiddenimports=[
-        'fitz',
-        'pymupdf',
-        'PIL',
-        'PIL._imagingtk',
-        'PIL._tkinter_finder',
-        'PIL.Image',
-        'PIL.ImageTk',
-        'PIL.PngImagePlugin',
-        'PIL.JpegImagePlugin',
-        'PIL.GifImagePlugin',
-        'PIL.IcoImagePlugin',
-        'PIL.BmpImagePlugin',
-        'PIL.TiffImagePlugin',
-        'PIL.WebPImagePlugin',
-        'PIL.ImageDraw',
-        'PIL.ImageFont'
-    ],
+    [str(project / "main.py")],
+    pathex=[str(project)],
+    binaries=[(str(project / "wkhtmltopdf.exe"), ".")],
+    datas=[(str(frontend), "frontend_dist"), (str(project / "app.ico"), ".")],
+    hiddenimports=["webview.platforms.edgechromium", "uvicorn.logging", "uvicorn.loops.auto", "uvicorn.protocols.http.auto", "uvicorn.lifespan.on"],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
+    excludes=["tkinter", "PyQt5", "PyQt6", "PySide2", "PySide6"],
     noarchive=False,
 )
-
-pyz = PYZ(
-    a.pure,
-    a.zipped_data,
-    cipher=block_cipher
-)
-
+pyz = PYZ(a.pure)
 exe = EXE(
-    pyz,
-    a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    [],
-    name='水電消防報表下載系統',  # 執行檔名稱
+    pyz, a.scripts, a.binaries, a.datas, [],
+    name="水電消防報表下載系統",
     debug=False,
-    bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
-    console=False,  # 改為 False 以隱藏命令列視窗
-    disable_windowed_traceback=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
-    icon='app.ico',
-) 
+    upx=False,
+    console=False,
+    icon=str(project / "app.ico"),
+)

@@ -4,16 +4,14 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-pyqt5 = "*"
-pyqtwebengine = "*"
-pdfkit = "*"
-pyinstaller = "*"
-colorama = "*"
-pypdf2 = "<3.0"
-pillow = "*"
-pymupdf = "*"
+fastapi = "*"
+uvicorn = "*"
+pywebview = "*"
+pymupdf = "==1.28.2"
+pyinstaller = "==6.15.0"
 
 [dev-packages]
+httpx = "*"
 
 [requires]
 python_version = "3.13.3"
